@@ -1,43 +1,66 @@
+import OnboardingStep.CollectPassword
+import OnboardingStep.CollectUserName
+import com.gft.multistepflow.model.BaseUserInputValidator
+import com.gft.multistepflow.model.DefaultNoOpValidator
+import com.gft.multistepflow.model.UserInputValidator
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
-import com.gft.multistepflow.model.UserInputValidator
+import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.UpdateUserInputUseCase
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
+import kotlin.random.Random
 
-class FlowTest {
+class AltFlowTest {
 
     @Test
     fun test() = runBlocking {
-        val testFlow = TestFlow()
+        val testFlow = AltTestFlow()
 
-        testFlow.start(MyStep())
+        val step = Step(CollectUserName::class, "Enter username", "pp", )
+        testFlow.start(step)
 
-        // val usecase = UpdateTestFlowUseCase(testFlow)
-        // usecase.invoke<MyStep, String> { input ->
-        //
-        //     "aaaaaaaaaaaaaa"
-        // }
-
-    }
-}
-
-class MyStep : Step<MyStep, String, String, Int>(
-    "PY",
-    "UI",
-    0,
-    object : UserInputValidator<String, Int> {
-        override fun <T : Int> validate(oldUserInput: String, newUserInput: String, oldValidationResult: Int?): T? {
-            println("#Test MyStep validation: $oldUserInput, $newUserInput, $oldValidationResult")
-            return 5 as T
+        val updateUseCase = AltUpdateTestFlowUseCase(testFlow)
+        updateUseCase.invoke<CollectUserName, String> {
+            "real password"
         }
-    }
-) {
-    override fun copy(payload: String, userInput: String, validationResult: Int?): MyStep {
-        return MyStep()
+        updateUseCase.invoke(CollectUserName::class, CollectPassword::class) {
+            "real password 22222"
+        }
+
+
+        println("#Test $testFlow")
+
+
+
+
+        // Step(OnboardingStep.DummyStep::class)
+        // Step(OnboardingStep.DummyStep2::class, "payload")
+        // Step(OnboardingStep.DummyStep3::class, "userInput")
     }
 }
 
-class TestFlow : MultiStepFlow()
+class PasswordValidator : UserInputValidator<String, Long> {
+    override fun validate(currentUserInput: String, newUserInput: String, currentValidationResult: Long?): Long {
+        println("#Test Validating $currentUserInput / $newUserInput / $currentValidationResult")
+        return Random.nextLong()
+    }
+}
 
-class UpdateTestFlowUseCase(flow: TestFlow) : UpdateUserInputUseCase(flow)
+sealed interface OnboardingStep {
+    interface CollectUserName : StepType<String, String, Int, DefaultNoOpValidator>, OnboardingStep
+    interface CollectPassword : StepType<Int, String, Long, PasswordValidator>, OnboardingStep
+
+    interface DummyStep : StepType<Unit, Unit, Unit, DefaultNoOpValidator>, OnboardingStep
+    interface DummyStep2 : StepType<String, Unit, Unit, DefaultNoOpValidator>, OnboardingStep
+    interface DummyStep3 : StepType<Unit, String, Unit, DefaultNoOpValidator>, OnboardingStep
+}
+
+class AltTestFlow : MultiStepFlow()
+
+class AltUpdateTestFlowUseCase(flow: AltTestFlow) : UpdateUserInputUseCase(flow)
+
+
+fun Step.Actions<CollectUserName>.getAction() {
+
+}

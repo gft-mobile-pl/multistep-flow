@@ -1,32 +1,30 @@
 package com.gft.multistepflow.usecases
 
-import com.gft.multistepflow.model.AltMultiStepFlow
-import com.gft.multistepflow.model.AltStep
-import com.gft.multistepflow.model.AltStepType
+import com.gft.multistepflow.model.BaseUserInputValidator
+import com.gft.multistepflow.model.MultiStepFlow
+import com.gft.multistepflow.model.Step
+import com.gft.multistepflow.model.StepType
 import kotlin.reflect.KClass
 
-abstract class AltUpdateUserInputUseCase(
-    private val flow: AltMultiStepFlow
+abstract class UpdateUserInputUseCase(
+    private val flow: MultiStepFlow
 ) {
-    inline operator fun <reified StepType : AltStepType<*, UserInput, *, *>, reified UserInput : Any> invoke(
+    inline operator fun <reified Type : StepType<*, UserInput, *, *>, reified UserInput : Any> invoke(
         noinline mutator: (UserInput) -> UserInput
     ) {
-        //this(StepType::class, mutator) // << działa, bo wskazuje na Klasę a nie konkretną przeciążoną metodę!
-        this.invoke(StepType::class, mutator) // << wymaga PublishedApi, bo wskazuje na ukrytą metodę!
+        this(Type::class, mutator)
     }
 
     @Suppress("UNCHECKED_CAST")
-    @PublishedApi
-    internal operator fun <Type : AltStepType<*, UserInput, *, ValidationResult>, UserInput, ValidationResult> invoke(
-        stepClass: KClass<Type>,
-        mutator: (UserInput) -> UserInput
+    private operator fun <Type : StepType<*, UserInput, *, *>, UserInput> invoke(
+        stepClass: KClass<Type>, mutator: (UserInput) -> UserInput
     ) {
         flow.session.update { sessionData ->
 
             if (sessionData.currentStep.type != stepClass) {
                 throw IllegalArgumentException("Cannot update current step as it cannot be casted to $stepClass")
             }
-            val currentStep = sessionData.currentStep as AltStep<*, *, UserInput, ValidationResult, *>
+            val currentStep = sessionData.currentStep as Step<*, *, UserInput, Any?, BaseUserInputValidator<Any?, Any?, Any?>>
 
             val newInput = mutator(currentStep.userInput)
             val validationResult = if (currentStep.userInputValidator != null) {
@@ -35,22 +33,21 @@ abstract class AltUpdateUserInputUseCase(
 
             sessionData.copy(
                 currentStep = currentStep.copy(
-                    userInput = newInput,
-                    validationResult = validationResult
+                    userInput = newInput, validationResult = validationResult
                 )
             )
         }
     }
 
     operator fun <UserInput : Any> invoke(
-        vararg classes: KClass<out AltStepType<*, UserInput, *, *>>,
+        vararg classes: KClass<out StepType<*, UserInput, *, *>>,
         mutator: (UserInput) -> UserInput
     ) {
         flow.session.update { sessionData ->
             for (stepClass in classes) {
                 if (sessionData.currentStep.type == stepClass) {
                     @Suppress("UNCHECKED_CAST")
-                    val currentStep = sessionData.currentStep as AltStep<*, *, UserInput, Any?, *>
+                    val currentStep = sessionData.currentStep as Step<*, *, UserInput, Any?, BaseUserInputValidator<Any?, Any?, Any?>>
                     val newInput = mutator(currentStep.userInput)
                     val validationResult = if (currentStep.userInputValidator != null) {
                         currentStep.userInputValidator.validate(currentStep.userInput, newInput, currentStep.validationResult)

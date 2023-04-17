@@ -1,16 +1,22 @@
 package com.gft.multistepflow.model
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
-import kotlin.reflect.KClass
+/**
+ * Common interface of all user input validators.
+ *
+ * Tip: You may create generic validators factory with:
+ * `inline fun <reified Validator : UserInputValidator<*, *>> provideValidator() = (object : KoinComponent {}).get<Validator>()`
+ */
+interface UserInputValidator<in UserInput, ValidationResult> : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>
 
-interface UserInputValidator<in UserInput, in ValidationResult> {
-    fun <T : ValidationResult> validate(oldUserInput: UserInput, newUserInput: UserInput, oldValidationResult: ValidationResult?): T?
+/**
+ * Do not implement this interface directly - rather use [UserInputValidator].
+ * This is just an intermediate interface which simplifies generics of input validators.
+ */
+interface BaseUserInputValidator<in UserInput, in CurrentValidationResult, out NewValidationResult> {
+    fun validate(currentUserInput: UserInput, newUserInput: UserInput, currentValidationResult: CurrentValidationResult?): NewValidationResult?
 }
 
-// mogę użyć Nothing jeśli to jest >>out<< ValidationResult. Nothing dziedziczy po wszystkim na raz.
-interface NoOpValidator : UserInputValidator<Any?, Any?>
-
-inline fun <reified StepType : AltStepType<*, *, *, Validator>, reified Validator : UserInputValidator<*, *>> provideValidator(
-    stepType: KClass<StepType>
-) = (object : KoinComponent {}).get<Validator>()
+/**
+ * A validator that does nothing and can be used with any [StepType].
+ */
+interface DefaultNoOpValidator : BaseUserInputValidator<Any?, Any?, Nothing>
