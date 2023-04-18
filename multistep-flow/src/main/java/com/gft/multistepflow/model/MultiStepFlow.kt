@@ -8,13 +8,13 @@ import kotlinx.coroutines.withContext
 
 abstract class MultiStepFlow {
     internal val mutex: Mutex = Mutex()
-    internal val session: Session<AltFlowPayload> = Session()
+    internal val session: Session<FlowPayload> = Session()
 
     init {
         //TODO("add isStarted")
     }
 
-    internal data class AltFlowPayload(
+    internal data class FlowPayload(
         val currentStep: Step<*, *, *, *, *>,
         val isAnyOperationInProgress: Boolean
     )
@@ -23,7 +23,7 @@ abstract class MultiStepFlow {
         currentStep: Step<*, *, *, *, *>
     ) = mutex.withLock {
         session.start(
-            AltFlowPayload(
+            FlowPayload(
                 currentStep = currentStep,
                 isAnyOperationInProgress = false
             )

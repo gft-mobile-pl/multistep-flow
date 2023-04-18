@@ -1,5 +1,8 @@
 package com.gft.multistepflow.model
 
+import com.gft.multistepflow.validators.BaseUserInputValidator
+import com.gft.multistepflow.validators.DefaultNoOpValidator
+import com.gft.multistepflow.validators.UserInputValidator
 import kotlin.reflect.KClass
 
 interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>>
@@ -8,7 +11,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
     val type: KClass<Type>,
     val payload: Payload,
     val userInput: UserInput,
-    val validationResult: ValidationResult? = null,
+    val validationResult: ValidationResult,
     internal val userInputValidator: Validator? = null
 ) {
     val actions: Actions<Type> = Actions()
@@ -20,7 +23,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
     fun copy(
         payload: Payload = this.payload,
         userInput: UserInput = this.userInput,
-        validationResult: ValidationResult? = this.validationResult,
+        validationResult: ValidationResult = this.validationResult,
     ): Step<Type, Payload, UserInput, ValidationResult, Validator> = Step(
         type = type,
         payload = payload,
@@ -39,7 +42,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
             type: KClass<Type>,
             payload: Payload,
             userInput: UserInput,
-            validationResult: ValidationResult? = null,
+            validationResult: ValidationResult,
             validator: Validator
         ) = Step(type, payload, userInput, validationResult, validator)
 
@@ -48,24 +51,14 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
             type: KClass<Type>,
             payload: Payload,
             userInput: UserInput,
-            validationResult: ValidationResult? = null,
+            validationResult: ValidationResult
         ) = Step(type, payload, userInput, validationResult, null)
+
+        // validator and validation result not required
+        operator fun <Type : StepType<Payload, UserInput, Unit, DefaultNoOpValidator>, Payload, UserInput, Unit> invoke(
+            type: KClass<Type>,
+            payload: Payload,
+            userInput: UserInput
+        ) = Step(type, payload, userInput, Unit, null)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
