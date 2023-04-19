@@ -8,7 +8,7 @@ import com.gft.multistepflow.validators.BaseUserInputValidator
 import kotlin.reflect.KClass
 
 abstract class UpdateUserInputUseCase(
-    private val flow: MultiStepFlow
+    private val flow: MultiStepFlow<out StepType<*, *, *, *>>
 ) {
     inline operator fun <reified Type : StepType<*, UserInput, *, *>, reified UserInput : Any> invoke(
         noinline mutator: (UserInput) -> UserInput

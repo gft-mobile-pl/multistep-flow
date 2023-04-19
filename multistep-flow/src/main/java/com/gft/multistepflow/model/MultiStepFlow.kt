@@ -6,7 +6,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-abstract class MultiStepFlow {
+abstract class MultiStepFlow<T: StepType<*, *, *, *>> {
     internal val mutex: Mutex = Mutex()
     internal val session: Session<FlowPayload> = Session()
 
@@ -19,8 +19,8 @@ abstract class MultiStepFlow {
         val isAnyOperationInProgress: Boolean
     )
 
-    suspend fun start(
-        currentStep: Step<*, *, *, *, *>
+    suspend fun <StepType : T> start(
+        currentStep: Step<StepType, *, *, *, *>
     ) = mutex.withLock {
         session.start(
             FlowPayload(
