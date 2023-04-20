@@ -6,7 +6,7 @@ import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import kotlinx.coroutines.sync.withLock
 
-class StartMultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
+open class StartMultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
     private val flow: MultiStepFlow<FlowStepType>
 ) {
     suspend operator fun <StepType : FlowStepType> invoke(

@@ -80,7 +80,7 @@ class FlowTest {
         val step = Step(ConfirmTermsAndConditions::class, "payload", 0)
 
         val testFlow = OnboardingFlow()
-        val startFlow = StartMultiStepFlow(testFlow)
+        val startFlow = StartOnboardingFlow(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
@@ -146,6 +146,8 @@ class PasswordValidator : UserInputValidator<String, Long?> {
     }
 }
 
+object UnrelatedStepType : StepType<String, String, Int, DefaultNoOpValidator>
+
 sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator> {
     object CollectUserName : OnboardingStep<String, String, Int, DefaultNoOpValidator>
     object CollectUserNameTwo : OnboardingStep<String, String, Int, UserInputValidator<String, Int>>
@@ -201,4 +203,6 @@ sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator 
     }
 }
 
-class OnboardingFlow : MultiStepFlow<OnboardingStep<*, *, *, *>>()
+class OnboardingFlow : MultiStepFlow<OnboardingStep<*, *, *, *>>(true)
+
+class StartOnboardingFlow(flow: OnboardingFlow) :  StartMultiStepFlow<OnboardingStep<*, *, *, *>>(flow)

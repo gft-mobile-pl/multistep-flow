@@ -3,8 +3,8 @@ package com.gft.multistepflow.model
 import com.gft.observablesession.Session
 import kotlinx.coroutines.sync.Mutex
 
-abstract class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
-    val localHistoryEnabled: Boolean = false,
+open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
+    val historyEnabled: Boolean,
     internal val mutex: Mutex = Mutex()
 ) {
     internal val session: Session<FlowState> = Session()
