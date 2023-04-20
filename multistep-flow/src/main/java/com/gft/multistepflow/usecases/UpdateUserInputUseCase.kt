@@ -7,7 +7,7 @@ import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.validators.BaseUserInputValidator
 import kotlin.reflect.KClass
 
-abstract class UpdateUserInputUseCase(
+open class UpdateUserInputUseCase(
     private val flow: MultiStepFlow<out StepType<*, *, *, *>>
 ) {
     inline operator fun <reified Type : StepType<*, UserInput, *, *>, reified UserInput : Any> invoke(
@@ -27,6 +27,16 @@ abstract class UpdateUserInputUseCase(
             val currentStep = sessionData.currentStep as Step<*, *, UserInput, Any?, BaseUserInputValidator<Any?, Any?, Any?>>
             updateSession(currentStep, mutator, sessionData)
         }
+    }
+
+    operator fun <Type: StepType<*, UserInput, ValidationResult, *>, UserInput, ValidationResult> invoke(
+        vararg stepTypes: Type,
+        mutator: (UserInput) -> UserInput
+    ) {
+        invoke(
+            classes = stepTypes.map { stepType -> stepType::class }.toTypedArray(),
+            mutator = mutator
+        )
     }
 
     operator fun <UserInput, ValidationResult> invoke(

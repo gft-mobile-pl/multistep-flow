@@ -29,7 +29,7 @@ class FlowTest {
         val testFlow = OnboardingFlow()
         testFlow.start(step)
 
-        val updateUseCase = UpdateOnboardingUserInputUseCase(testFlow)
+        val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<CollectPassword, String> {
             "first password"
         }
@@ -49,7 +49,7 @@ class FlowTest {
         val testFlow = OnboardingFlow()
         testFlow.start(step)
 
-        val updateUseCase = UpdateOnboardingUserInputUseCase(testFlow)
+        val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<CollectUserName, String> {
             "first username"
         }
@@ -60,6 +60,16 @@ class FlowTest {
         }
         println("#Test (second username set) $testFlow")
 
+        updateUseCase.invoke(CollectUserName) {
+            "third username"
+        }
+        println("#Test (third username set) $testFlow")
+
+        updateUseCase.invoke(CollectUserName, CollectUserNameTwo) {
+            "fourth username"
+        }
+        println("#Test (third fourth set) $testFlow")
+
     }
 
     @Test
@@ -69,7 +79,7 @@ class FlowTest {
         val testFlow = OnboardingFlow()
         testFlow.start(step)
 
-        val updateUseCase = UpdateOnboardingUserInputUseCase(testFlow)
+        val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<ConfirmTermsAndConditions, Int> {
             it + 1
         }
@@ -94,7 +104,7 @@ class FlowTest {
         val testFlow = OnboardingFlow()
         testFlow.start(step)
 
-        val updateUseCase = UpdateOnboardingUserInputUseCase(testFlow)
+        val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<ComplexStep, ComplexStepUserInput> {
             it.copy(nickname = "aa")
         }
@@ -132,8 +142,8 @@ class PasswordValidator : UserInputValidator<String, Long?> {
 }
 
 sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator> {
-    interface CollectUserName : OnboardingStep<String, String, Int, DefaultNoOpValidator>
-    interface CollectUserNameTwo : OnboardingStep<String, String, Int, UserInputValidator<String, Int>>
+    object CollectUserName : OnboardingStep<String, String, Int, DefaultNoOpValidator>
+    object CollectUserNameTwo : OnboardingStep<String, String, Int, UserInputValidator<String, Int>>
     interface CollectPassword : OnboardingStep<Int, String, Long?, PasswordValidator>
     interface CollectPasswordTwo : OnboardingStep<Boolean, String, Long?, DefaultNoOpValidator>
     interface ConfirmTermsAndConditions : OnboardingStep<String, Int, Unit, DefaultNoOpValidator>
@@ -187,6 +197,3 @@ sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator 
 }
 
 class OnboardingFlow : MultiStepFlow<OnboardingStep<*, *, *, *>>()
-
-class UpdateOnboardingUserInputUseCase(flow: OnboardingFlow) : UpdateUserInputUseCase(flow)
-
