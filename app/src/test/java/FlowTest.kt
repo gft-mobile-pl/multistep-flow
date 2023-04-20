@@ -1,5 +1,3 @@
-import OnboardingStep.CollectPassword
-import OnboardingStep.CollectPasswordTwo
 import OnboardingStep.CollectUserName
 import OnboardingStep.CollectUserNameTwo
 import OnboardingStep.ComplexStep
@@ -24,72 +22,42 @@ import kotlin.random.Random
 class FlowTest {
 
     @Test
-    fun test1() = runBlocking {
-        val step = Step(CollectPassword::class, 10, "empty password", null, PasswordValidator())
-
-        val testFlow = OnboardingFlow()
-        val startFlow = StartMultiStepFlow(testFlow)
-        startFlow(step)
-
-        val updateUseCase = UpdateUserInputUseCase(testFlow)
-        updateUseCase.invoke<CollectPassword, String> {
-            "first password"
-        }
-        println("#Test (first pass set) $testFlow")
-
-        updateUseCase.invoke(CollectPassword::class, CollectPasswordTwo::class) {
-            "second password"
-        }
-        println("#Test (second pass set) $testFlow")
-
-    }
-
-    @Test
     fun test2() = runBlocking {
-        val step = Step(CollectUserName::class, "payload", "empty username", 5)
+        val step = Step(CollectUserName, "payload", "empty username", 5)
 
         val testFlow = OnboardingFlow()
         val startFlow = StartMultiStepFlow(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
-        updateUseCase.invoke<CollectUserName, String> {
+
+        updateUseCase.invoke(CollectUserName) {
             "first username"
         }
         println("#Test (first username set) $testFlow")
 
-        updateUseCase.invoke(CollectUserName::class, CollectUserNameTwo::class) {
+        updateUseCase.invoke(CollectUserName, CollectUserNameTwo) {
             "second username"
         }
         println("#Test (second username set) $testFlow")
-
-        updateUseCase.invoke(CollectUserName) {
-            "third username"
-        }
-        println("#Test (third username set) $testFlow")
-
-        updateUseCase.invoke(CollectUserName, CollectUserNameTwo) {
-            "fourth username"
-        }
-        println("#Test (third fourth set) $testFlow")
 
     }
 
     @Test
     fun test3() = runBlocking {
-        val step = Step(ConfirmTermsAndConditions::class, "payload", 0)
+        val step = Step(ConfirmTermsAndConditions, "payload", 0)
 
         val testFlow = OnboardingFlow()
         val startFlow = StartOnboardingFlow(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
-        updateUseCase.invoke<ConfirmTermsAndConditions, Int> {
+        updateUseCase.invoke(ConfirmTermsAndConditions) {
             it + 1
         }
         println("#Test (first consent set) $testFlow")
 
-        updateUseCase.invoke(ConfirmTermsAndConditions::class) {
+        updateUseCase.invoke(ConfirmTermsAndConditions) {
             it + 1
         }
         println("#Test (second consent set) $testFlow")
@@ -99,39 +67,40 @@ class FlowTest {
     @Test
     fun test4() = runBlocking {
         val step = Step(
-            type = ComplexStep::class,
+            type = ComplexStep,
             payload = Unit,
             userInput = ComplexStepUserInput("", null),
             validationResult = ComplexStepValidationResult(false, null),
-            validator = ComplexStepValidator())
+            validator = ComplexStepValidator()
+        )
 
         val testFlow = OnboardingFlow()
         val startFlow = StartMultiStepFlow(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
-        updateUseCase.invoke<ComplexStep, ComplexStepUserInput> {
+        updateUseCase.invoke(ComplexStep) {
             it.copy(nickname = "aa")
         }
         println("#Test (first nickname set) $testFlow")
 
-        updateUseCase.invoke(ComplexStep::class) {
+        updateUseCase.invoke(ComplexStep) {
             it.copy(nickname = "MySecondNickName")
         }
         println("#Test (second nickname set) $testFlow")
 
 
-        updateUseCase.invoke<ComplexStep, ComplexStepUserInput> {
+        updateUseCase.invoke(ComplexStep) {
             it.copy(age = 20)
         }
         println("#Test (first age set) $testFlow")
 
-        updateUseCase.invoke(ComplexStep::class) {
+        updateUseCase.invoke(ComplexStep) {
             it.copy(age = null)
         }
         println("#Test (second age set) $testFlow")
 
-        updateUseCase.invoke(ComplexStep::class) {
+        updateUseCase.invoke(ComplexStep) {
             it.copy(age = 3)
         }
         println("#Test (third age set) $testFlow")
@@ -148,14 +117,15 @@ class PasswordValidator : UserInputValidator<String, Long?> {
 
 object UnrelatedStepType : StepType<String, String, Int, DefaultNoOpValidator>
 
-sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator> {
+sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+    StepType<Payload, UserInput, ValidationResult, Validator> {
     object CollectUserName : OnboardingStep<String, String, Int, DefaultNoOpValidator>
     object CollectUserNameTwo : OnboardingStep<String, String, Int, UserInputValidator<String, Int>>
-    interface CollectPassword : OnboardingStep<Int, String, Long?, PasswordValidator>
-    interface CollectPasswordTwo : OnboardingStep<Boolean, String, Long?, DefaultNoOpValidator>
-    interface ConfirmTermsAndConditions : OnboardingStep<String, Int, Unit, DefaultNoOpValidator>
+    object CollectPassword : OnboardingStep<Int, String, Long?, PasswordValidator>
+    object CollectPasswordTwo : OnboardingStep<Boolean, String, Long?, DefaultNoOpValidator>
+    object ConfirmTermsAndConditions : OnboardingStep<String, Int, Unit, DefaultNoOpValidator>
 
-    interface ComplexStep : OnboardingStep<Unit, ComplexStepUserInput, ComplexStepValidationResult, ComplexStepValidator> {
+    object ComplexStep : OnboardingStep<Unit, ComplexStepUserInput, ComplexStepValidationResult, ComplexStepValidator> {
         data class ComplexStepUserInput(
             val nickname: String,
             val age: Int?
@@ -205,4 +175,4 @@ sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator 
 
 class OnboardingFlow : MultiStepFlow<OnboardingStep<*, *, *, *>>(true)
 
-class StartOnboardingFlow(flow: OnboardingFlow) :  StartMultiStepFlow<OnboardingStep<*, *, *, *>>(flow)
+class StartOnboardingFlow(flow: OnboardingFlow) : StartMultiStepFlow<OnboardingStep<*, *, *, *>>(flow)

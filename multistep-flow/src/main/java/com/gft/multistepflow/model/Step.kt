@@ -8,7 +8,7 @@ import kotlin.reflect.KClass
 interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>>
 
 class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> private constructor(
-    val type: KClass<Type>,
+    val type: Type,
     val payload: Payload,
     val userInput: UserInput,
     val validationResult: ValidationResult,
@@ -39,7 +39,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
     companion object {
         // all fields required
         operator fun <Type : StepType<Payload, UserInput, ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : UserInputValidator<UserInput, ValidationResult>> invoke(
-            type: KClass<Type>,
+            type: Type,
             payload: Payload,
             userInput: UserInput,
             validationResult: ValidationResult,
@@ -48,7 +48,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
 
         // validator not required
         operator fun <Type : StepType<Payload, UserInput, ValidationResult, DefaultNoOpValidator>, Payload, UserInput, ValidationResult> invoke(
-            type: KClass<Type>,
+            type: Type,
             payload: Payload,
             userInput: UserInput,
             validationResult: ValidationResult
@@ -56,7 +56,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
 
         // validator and validation result not required
         operator fun <Type : StepType<Payload, UserInput, Unit, DefaultNoOpValidator>, Payload, UserInput, Unit> invoke(
-            type: KClass<Type>,
+            type: Type,
             payload: Payload,
             userInput: UserInput
         ) = Step(type, payload, userInput, Unit, null)

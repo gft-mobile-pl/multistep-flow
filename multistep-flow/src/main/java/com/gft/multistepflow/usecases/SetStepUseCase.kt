@@ -37,20 +37,13 @@ class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
         reuseUserInput: Boolean = true,
         clearHistoryTo: FlowStepType,
         clearHistoryInclusive: Boolean
-    ) = this(step, reuseUserInput, clearHistoryTo::class, clearHistoryInclusive)
-
-    operator fun <StepType : FlowStepType> invoke(
-        step: Step<StepType, *, *, *, *>,
-        reuseUserInput: Boolean = true,
-        clearHistoryTo: KClass<out FlowStepType>,
-        clearHistoryInclusive: Boolean
     ) {
         this(
             step = step,
             reuseUserInput = reuseUserInput,
             clearHistoryTo = flow.session.requireData()
                 .previousSteps
-                .lastOrNull { stepFromHistory -> stepFromHistory.type::class == clearHistoryTo }
+                .lastOrNull { stepFromHistory -> stepFromHistory.type::class == clearHistoryTo::class }
                 ?: throw IllegalArgumentException("There is no step of type $clearHistoryTo in the history."),
             clearHistoryInclusive
         )

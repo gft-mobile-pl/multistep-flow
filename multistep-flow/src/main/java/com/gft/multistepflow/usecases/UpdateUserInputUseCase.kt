@@ -5,54 +5,26 @@ import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.validators.BaseUserInputValidator
-import kotlin.reflect.KClass
 
 open class UpdateUserInputUseCase(
     private val flow: MultiStepFlow<*>
 ) {
-    inline operator fun <reified Type : StepType<*, UserInput, *, *>, reified UserInput : Any> invoke(
-        noinline mutator: (UserInput) -> UserInput
-    ) {
-        this(Type::class, mutator)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private operator fun <Type : StepType<*, UserInput, *, *>, UserInput> invoke(
-        stepClass: KClass<Type>, mutator: (UserInput) -> UserInput
-    ) {
-        flow.session.update { sessionData ->
-            if (sessionData.currentStep.type != stepClass) {
-                throw IllegalArgumentException("Cannot update current step as it cannot be casted to $stepClass")
-            }
-            val currentStep = sessionData.currentStep as Step<*, *, UserInput, Any?, BaseUserInputValidator<Any?, Any?, Any?>>
-            updateSession(currentStep, mutator, sessionData)
-        }
-    }
-
     operator fun <Type : StepType<*, UserInput, ValidationResult, *>, UserInput, ValidationResult> invoke(
         vararg stepTypes: Type,
         mutator: (UserInput) -> UserInput
     ) {
-        invoke(
-            classes = stepTypes.map { stepType -> stepType::class }.toTypedArray(),
-            mutator = mutator
-        )
-    }
-
-    operator fun <UserInput, ValidationResult> invoke(
-        vararg classes: KClass<out StepType<*, UserInput, ValidationResult, *>>,
-        mutator: (UserInput) -> UserInput
-    ) {
         flow.session.update { sessionData ->
-            for (stepClass in classes) {
-                if (sessionData.currentStep.type == stepClass) {
+            for (stepType in stepTypes) {
+                if (sessionData.currentStep.type::class == stepType::class) {
                     @Suppress("UNCHECKED_CAST")
                     val currentStep =
                         sessionData.currentStep as Step<*, *, UserInput, ValidationResult, BaseUserInputValidator<Any?, ValidationResult, ValidationResult>>
                     return@update updateSession(currentStep, mutator, sessionData)
                 }
             }
-            throw IllegalArgumentException("Cannot update current step as it cannot be casted to any of $classes.")
+            if (stepTypes.size == 1) throw IllegalArgumentException("Cannot update current step as its type is not  ${stepTypes.first()}.")
+            else throw IllegalArgumentException("Cannot update current step as its type is not any of $stepTypes.")
+
         }
     }
 
