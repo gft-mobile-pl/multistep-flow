@@ -12,7 +12,8 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
     val payload: Payload,
     val userInput: UserInput,
     val validationResult: ValidationResult,
-    internal val userInputValidator: Validator? = null
+    internal val userInputValidator: Validator? = null,
+    val error: Throwable? = null
 ) {
     val actions: Actions<Type> = Actions()
 
@@ -24,12 +25,14 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
         payload: Payload = this.payload,
         userInput: UserInput = this.userInput,
         validationResult: ValidationResult = this.validationResult,
+        error: Throwable? = null
     ): Step<Type, Payload, UserInput, ValidationResult, Validator> = Step(
         type = type,
         payload = payload,
         userInput = userInput,
         validationResult = validationResult,
-        userInputValidator = userInputValidator
+        userInputValidator = userInputValidator,
+        error = error
     )
 
     override fun toString(): String {
