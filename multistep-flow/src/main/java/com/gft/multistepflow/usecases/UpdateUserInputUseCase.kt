@@ -1,7 +1,7 @@
 package com.gft.multistepflow.usecases
 
+import com.gft.multistepflow.model.FlowState
 import com.gft.multistepflow.model.MultiStepFlow
-import com.gft.multistepflow.model.MultiStepFlow.FlowPayload
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.validators.BaseUserInputValidator
@@ -29,7 +29,7 @@ open class UpdateUserInputUseCase(
         }
     }
 
-    operator fun <Type: StepType<*, UserInput, ValidationResult, *>, UserInput, ValidationResult> invoke(
+    operator fun <Type : StepType<*, UserInput, ValidationResult, *>, UserInput, ValidationResult> invoke(
         vararg stepTypes: Type,
         mutator: (UserInput) -> UserInput
     ) {
@@ -47,7 +47,8 @@ open class UpdateUserInputUseCase(
             for (stepClass in classes) {
                 if (sessionData.currentStep.type == stepClass) {
                     @Suppress("UNCHECKED_CAST")
-                    val currentStep = sessionData.currentStep as Step<*, *, UserInput, ValidationResult, BaseUserInputValidator<Any?, ValidationResult, ValidationResult>>
+                    val currentStep =
+                        sessionData.currentStep as Step<*, *, UserInput, ValidationResult, BaseUserInputValidator<Any?, ValidationResult, ValidationResult>>
                     return@update updateSession(currentStep, mutator, sessionData)
                 }
             }
@@ -58,8 +59,8 @@ open class UpdateUserInputUseCase(
     private fun <UserInput, ValidationResult> updateSession(
         currentStep: Step<*, *, UserInput, ValidationResult, BaseUserInputValidator<Any?, ValidationResult, ValidationResult>>,
         mutator: (UserInput) -> UserInput,
-        sessionData: FlowPayload
-    ): FlowPayload {
+        sessionData: FlowState
+    ): FlowState {
         val newInput = mutator(currentStep.userInput)
         return if (currentStep.userInputValidator != null) {
             val validationResult = currentStep.userInputValidator.validate(currentStep.userInput, newInput, currentStep.validationResult)

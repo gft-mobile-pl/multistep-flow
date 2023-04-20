@@ -10,6 +10,7 @@ import OnboardingStep.ConfirmTermsAndConditions
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
+import com.gft.multistepflow.usecases.StartMultiStepFlow
 import com.gft.multistepflow.usecases.UpdateUserInputUseCase
 import com.gft.multistepflow.validators.BaseUserInputValidator
 import com.gft.multistepflow.validators.CompositeUserInputValidator
@@ -27,7 +28,8 @@ class FlowTest {
         val step = Step(CollectPassword::class, 10, "empty password", null, PasswordValidator())
 
         val testFlow = OnboardingFlow()
-        testFlow.start(step)
+        val startFlow = StartMultiStepFlow(testFlow)
+        startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<CollectPassword, String> {
@@ -47,7 +49,8 @@ class FlowTest {
         val step = Step(CollectUserName::class, "payload", "empty username", 5)
 
         val testFlow = OnboardingFlow()
-        testFlow.start(step)
+        val startFlow = StartMultiStepFlow(testFlow)
+        startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<CollectUserName, String> {
@@ -77,7 +80,8 @@ class FlowTest {
         val step = Step(ConfirmTermsAndConditions::class, "payload", 0)
 
         val testFlow = OnboardingFlow()
-        testFlow.start(step)
+        val startFlow = StartMultiStepFlow(testFlow)
+        startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<ConfirmTermsAndConditions, Int> {
@@ -102,7 +106,8 @@ class FlowTest {
             validator = ComplexStepValidator())
 
         val testFlow = OnboardingFlow()
-        testFlow.start(step)
+        val startFlow = StartMultiStepFlow(testFlow)
+        startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
         updateUseCase.invoke<ComplexStep, ComplexStepUserInput> {

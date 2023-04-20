@@ -1,42 +1,21 @@
 package com.gft.multistepflow.model
 
 import com.gft.observablesession.Session
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 
-abstract class MultiStepFlow<T: StepType<*, *, *, *>> {
+abstract class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
+    val localHistoryEnabled: Boolean = false,
     internal val mutex: Mutex = Mutex()
-    internal val session: Session<FlowPayload> = Session()
-
-    init {
-        //TODO("add isStarted")
-    }
-
-    internal data class FlowPayload(
-        val currentStep: Step<*, *, *, *, *>,
-        val isAnyOperationInProgress: Boolean
-    )
-
-    suspend fun <StepType : T> start(
-        currentStep: Step<StepType, *, *, *, *>
-    ) = mutex.withLock {
-        session.start(
-            FlowPayload(
-                currentStep = currentStep,
-                isAnyOperationInProgress = false
-            )
-        )
-    }
-
-    suspend fun end() = withContext(NonCancellable) {
-        mutex.withLock {
-            session.end()
-        }
-    }
+) {
+    internal val session: Session<FlowState> = Session()
 
     override fun toString(): String {
-        return "AltMultiStepFlow(mutex=$mutex, session=${session.data.value})"
+        return "MultiStepFlow(isAnyOperationInProgress=${session.data.value?.isAnyOperationInProgress ?: false}, currentStep=${session.data.value?.currentStep ?: "[none]"})"
     }
 }
+
+internal data class FlowState(
+    val currentStep: Step<*, *, *, *, *>,
+    val isAnyOperationInProgress: Boolean,
+    val previousSteps: List<Step<*, *, *, *, *>>
+)
