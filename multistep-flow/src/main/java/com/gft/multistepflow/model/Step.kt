@@ -63,5 +63,7 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
             payload: Payload,
             userInput: UserInput
         ) = Step(type, payload, userInput, Unit, null)
+
+        operator fun <Type : StepType<Unit, Unit, Unit, DefaultNoOpValidator>> invoke(type : Type) = Step(type, Unit, Unit, Unit)
     }
 }
