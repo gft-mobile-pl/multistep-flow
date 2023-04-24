@@ -3,7 +3,6 @@ package com.gft.multistepflow.usecases
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
-import kotlin.reflect.KClass
 
 class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
     private val flow: MultiStepFlow<FlowStepType>
@@ -15,13 +14,14 @@ class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
     ) {
         flow.session.update { flowState ->
             if (flowState.currentStep.type == step.type) {
+                val newCurrentStep = if (reuseUserInput) {
+                    (step as Step<*, *, Any?, *, *>).copy(userInput = flowState.currentStep.userInput)
+                } else {
+                    step
+                }
                 flowState.copy(
-                    currentStep = if (reuseUserInput) {
-                        (step as Step<*, *, Any?, *, *>).copy(userInput = flowState.currentStep.userInput)
-                    } else {
-                        step
-                    },
-                    previousSteps = if (flow.historyEnabled) flowState.previousSteps.replaceLast(step) else flowState.previousSteps
+                    currentStep = newCurrentStep,
+                    previousSteps = if (flow.historyEnabled) flowState.previousSteps.replaceLast(newCurrentStep) else flowState.previousSteps
                 )
             } else {
                 flowState.copy(
@@ -62,13 +62,14 @@ class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
             val newHistory = flowState.previousSteps.popTo(clearHistoryTo, clearHistoryInclusive)
             val currentStep = newHistory.lastOrNull()
             if (currentStep?.type == step.type) {
+                val newCurrentStep = if (reuseUserInput) {
+                    (step as Step<*, *, Any?, *, *>).copy(userInput = currentStep.userInput)
+                } else {
+                    step
+                }
                 flowState.copy(
-                    currentStep = if (reuseUserInput) {
-                        (step as Step<*, *, Any?, *, *>).copy(userInput = currentStep.userInput)
-                    } else {
-                        step
-                    },
-                    previousSteps = if (flow.historyEnabled) newHistory.replaceLast(step) else flowState.previousSteps
+                    currentStep = newCurrentStep,
+                    previousSteps = if (flow.historyEnabled) newHistory.replaceLast(newCurrentStep) else flowState.previousSteps
                 )
             } else {
                 flowState.copy(
