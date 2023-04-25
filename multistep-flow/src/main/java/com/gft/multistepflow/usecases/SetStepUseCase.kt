@@ -14,14 +14,14 @@ class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
     ) {
         flow.session.update { flowState ->
             if (flowState.currentStep.type == step.type) {
-                val newCurrentStep = if (reuseUserInput) {
+                val stepToSet = if (reuseUserInput) {
                     (step as Step<*, *, Any?, *, *>).copy(userInput = flowState.currentStep.userInput)
                 } else {
                     step
                 }
                 flowState.copy(
-                    currentStep = newCurrentStep,
-                    previousSteps = if (flow.historyEnabled) flowState.previousSteps.replaceLast(newCurrentStep) else flowState.previousSteps
+                    currentStep = stepToSet,
+                    previousSteps = if (flow.historyEnabled) flowState.previousSteps.replaceLast(stepToSet) else flowState.previousSteps
                 )
             } else {
                 flowState.copy(
