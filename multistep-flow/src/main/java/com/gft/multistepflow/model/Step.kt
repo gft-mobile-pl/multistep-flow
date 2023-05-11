@@ -3,11 +3,10 @@ package com.gft.multistepflow.model
 import com.gft.multistepflow.validators.BaseUserInputValidator
 import com.gft.multistepflow.validators.DefaultNoOpValidator
 import com.gft.multistepflow.validators.UserInputValidator
-import kotlin.reflect.KClass
 
 interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>>
 
-class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> private constructor(
+class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> private constructor(
     val type: Type,
     val payload: Payload,
     val userInput: UserInput,
@@ -44,8 +43,6 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
         userInputValidator = userInputValidator,
         error = error
     )
-
-
 
     override fun toString(): String {
         return "Step(type=$type, payload=$payload, userInput=$userInput, validationResult=$validationResult, userInputValidator=$userInputValidator, actions=$actions)"
@@ -98,12 +95,12 @@ class Step<Type : StepType<Payload, UserInput, out ValidationResult, Validator>,
         ) = Step(type, payload, userInput, validationResult, null)
 
         // validator and validation result not required
-        operator fun <Type : StepType<Payload, UserInput, Unit, DefaultNoOpValidator>, Payload, UserInput, Unit> invoke(
+        operator fun <Type : StepType<Payload, UserInput, Unit, DefaultNoOpValidator>, Payload, UserInput> invoke(
             type: Type,
             payload: Payload,
             userInput: UserInput
         ) = Step(type, payload, userInput, Unit, null)
 
-        operator fun <Type : StepType<Unit, Unit, Unit, DefaultNoOpValidator>> invoke(type : Type) = Step(type, Unit, Unit, Unit)
+        operator fun <Type : StepType<Unit, Unit, Unit, DefaultNoOpValidator>> invoke(type: Type) = Step(type, Unit, Unit, Unit)
     }
 }

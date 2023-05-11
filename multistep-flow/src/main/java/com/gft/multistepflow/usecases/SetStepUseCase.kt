@@ -3,8 +3,9 @@ package com.gft.multistepflow.usecases
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
+import com.gft.multistepflow.utils.replaceLast
 
-class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
+open class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
     private val flow: MultiStepFlow<FlowStepType>
 ) {
     @Suppress("UNCHECKED_CAST")
@@ -25,7 +26,7 @@ class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
                 )
             } else {
                 flowState.copy(
-                    currentStep = step,
+                    currentStep = step as Step<*, *, *, *, *>,
                     previousSteps = if (flow.historyEnabled) flowState.previousSteps + step else flowState.previousSteps
                 )
             }
@@ -62,18 +63,18 @@ class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
             val newHistory = flowState.previousSteps.popTo(clearHistoryTo, clearHistoryInclusive)
             val currentStep = newHistory.lastOrNull()
             if (currentStep?.type == step.type) {
-                val newCurrentStep = if (reuseUserInput) {
+                val stepToSet = if (reuseUserInput) {
                     (step as Step<*, *, Any?, *, *>).copy(userInput = currentStep.userInput)
                 } else {
                     step
                 }
                 flowState.copy(
-                    currentStep = newCurrentStep,
-                    previousSteps = if (flow.historyEnabled) newHistory.replaceLast(newCurrentStep) else flowState.previousSteps
+                    currentStep = stepToSet,
+                    previousSteps = if (flow.historyEnabled) newHistory.replaceLast(stepToSet) else flowState.previousSteps
                 )
             } else {
                 flowState.copy(
-                    currentStep = step,
+                    currentStep = step as Step<*, *, *, *, *>,
                     previousSteps = if (flow.historyEnabled) newHistory + step else flowState.previousSteps
                 )
             }
@@ -85,5 +86,3 @@ private fun <T> List<T>.popTo(item: T, inclusive: Boolean): List<T> {
     val itemIndex = lastIndexOf(item)
     return slice(0..(if (inclusive) itemIndex - 1 else itemIndex))
 }
-
-private fun <T> List<T>.replaceLast(item: T) = slice(0 until lastIndex) + item

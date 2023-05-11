@@ -7,7 +7,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
-class PerformActionUseCase(
+open class PerformActionUseCase(
     private val flow: MultiStepFlow<*>
 ) {
     suspend operator fun invoke(

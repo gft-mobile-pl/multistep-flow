@@ -1,11 +1,9 @@
-package com.gft.multistepflow
+package com.gft.multistepflow.usecases
 
-import com.gft.multistepflow.SetStepUseCaseTest.TestStepType.*
+import com.gft.multistepflow.usecases.SetStepUseCaseTest.TestStepType.*
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
-import com.gft.multistepflow.usecases.SetStepUseCase
-import com.gft.multistepflow.usecases.StartMultiStepFlow
 import com.gft.multistepflow.validators.BaseUserInputValidator
 import com.gft.multistepflow.validators.DefaultNoOpValidator
 import kotlinx.coroutines.runBlocking

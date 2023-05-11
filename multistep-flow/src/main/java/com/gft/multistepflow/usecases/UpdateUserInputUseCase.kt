@@ -4,6 +4,7 @@ import com.gft.multistepflow.model.FlowState
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
+import com.gft.multistepflow.utils.replaceLast
 import com.gft.multistepflow.validators.BaseUserInputValidator
 
 open class UpdateUserInputUseCase(
@@ -19,7 +20,8 @@ open class UpdateUserInputUseCase(
                     @Suppress("UNCHECKED_CAST")
                     val currentStep =
                         sessionData.currentStep as Step<*, *, UserInput, ValidationResult, BaseUserInputValidator<Any?, ValidationResult, ValidationResult>>
-                    return@update updateSession(currentStep, mutator, sessionData)
+                    @Suppress("UNCHECKED_CAST")
+                    return@update updateSession(currentStep, mutator, sessionData as FlowState<*, *, UserInput, *>)
                 }
             }
             if (stepTypes.size == 1) throw IllegalArgumentException("Cannot update current step as its type is not  ${stepTypes.first()}.")
@@ -31,23 +33,21 @@ open class UpdateUserInputUseCase(
     private fun <UserInput, ValidationResult> updateSession(
         currentStep: Step<*, *, UserInput, ValidationResult, BaseUserInputValidator<Any?, ValidationResult, ValidationResult>>,
         mutator: (UserInput) -> UserInput,
-        sessionData: FlowState
-    ): FlowState {
+        sessionData: FlowState<*, *, UserInput, *>
+    ): FlowState<*, *, *, *> {
         val newInput = mutator(currentStep.userInput)
-        return if (currentStep.userInputValidator != null) {
+        val updatedStep = if (currentStep.userInputValidator != null) {
             val validationResult = currentStep.userInputValidator.validate(currentStep.userInput, newInput, currentStep.validationResult)
-            sessionData.copy(
-                currentStep = currentStep.copy(
-                    userInput = newInput,
-                    validationResult = validationResult
-                )
+            currentStep.copy(
+                userInput = newInput,
+                validationResult = validationResult
             )
         } else {
-            sessionData.copy(
-                currentStep = currentStep.copy(
-                    userInput = newInput
-                )
-            )
+            currentStep.copy(userInput = newInput)
         }
+        return sessionData.copy(
+            currentStep = updatedStep,
+            previousSteps = if (flow.historyEnabled) sessionData.previousSteps.replaceLast(updatedStep) else sessionData.previousSteps
+        )
     }
 }

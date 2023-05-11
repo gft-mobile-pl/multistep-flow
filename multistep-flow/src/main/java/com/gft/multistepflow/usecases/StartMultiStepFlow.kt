@@ -14,7 +14,7 @@ open class StartMultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
     ) = flow.mutex.withLock {
         flow.session.start(
             FlowState(
-                currentStep = currentStep,
+                currentStep = currentStep as Step<*, *, *, *, *>,
                 isAnyOperationInProgress = false,
                 previousSteps = if (flow.historyEnabled) listOf(currentStep) else emptyList()
             )

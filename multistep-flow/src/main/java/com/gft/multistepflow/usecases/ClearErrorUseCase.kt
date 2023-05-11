@@ -2,7 +2,7 @@ package com.gft.multistepflow.usecases
 
 import com.gft.multistepflow.model.MultiStepFlow
 
-class ClearErrorUseCase(
+open class ClearErrorUseCase(
     private val flow: MultiStepFlow<*>
 ) {
     operator fun invoke() {
