@@ -35,9 +35,86 @@ Validation is performed each the user input is updated as a result of user actio
 (that is same step is returned with a different user input) the `Validator` will not be applied to the user input automatically.
 
 All generics types of `StepType` are optional. 
-One may use `Unit` for unused `Payload`, `UserInput` and `ValidationResult` and `DefaultNoOpValidator` if `Validator` is not required.
+One may use `Unit` for unused `Payload`, `UserInput` or `ValidationResult` and `DefaultNoOpValidator` if `Validator` is not required.
+
+**Example**
+```kotlin
+@JvmInline
+value class Username(val value: String)
+
+@JvmInline
+value class Password(val value: String)
+
+enum class PasswordValidationResult {
+    VALID, TOO_SHORT
+}
+
+object CollectUsername : StepType<Unit, Username, Unit, DefaultNoOpValidator>
+object CollectPassword : StepType<Unit, Password, PasswordValidationResult, MinLengthValidator>
+```
+In this example two step types are defined. They do not provide `Payload` (`Unit` is used), but allow the user to provide and edit `Username` and `Password`.
+`CollectPassword` defines that `MinLengthValidator` will be applied to the user input and the result of validation is of `PasswordValidationResult` type.
+
+> Tip: in the example above the `object` is used while defining step types. 
+> Although one could use `interface` instead, the API of this library almost always expects **instances** of the step types. 
+> <br />Just use `objects`. You have been warned ;)  
+
+> Primitive types may be used instead of `value class` for `Payload`, `UserInput` and `ValidationResult`. 
+> However, the use of more meaningful types is always suggested.
 
 ### Grouping steps
+
+More than often it is useful to group all the steps that constitute a particular process/flow by utilizing the `sealed interface`:
+```kotlin
+sealed interface LoginStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+    StepType<Payload, UserInput, ValidationResult, Validator> {
+    
+    object CollectUsername : LoginStep<Unit, Username, Unit, DefaultNoOpValidator>
+    object CollectPassword : LoginStep<Unit, Password, Int, MinLengthValidator>
+}
+```
+
+Note: In Kotlin you may define "children" of the `sealed interface` anywhere within the same package. 
+It means that you may achieve the same result with the following code:
+```kotlin
+// base step type (interface)
+sealed interface LoginStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+    StepType<Payload, UserInput, ValidationResult, Validator>
+
+// concrete step types (objects)
+object CollectUsername : LoginStep<Unit, Username, Unit, DefaultNoOpValidator>
+object CollectPassword : LoginStep<Unit, Password, Int, MinLengthValidator>
+```
+Both code snippets look very similar, but the second approach allows the step types to be defined in a different file than base step type as long it is placed in the same package.
+This may be useful if you want to reuse the same step in a few related processes (you may find more on this below).
+
+**Notes on generics**
+
+Unfortunately, due to the way generics work, you must always include this static part in the base step interface definition:
+```kotlin
+<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator>
+```
+Simply copy/paste it as needed without any modifications.
+
+#### Using same step in multiple processes
+
+Sometimes one may want to use the same step within a few related processes.
+```kotlin
+@JvmInline
+value class Passcode(val value: String)
+
+// 1. Define the base step type for each process
+sealed interface DefinePasscodeStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+    StepType<Payload, UserInput, ValidationResult, Validator>
+
+sealed interface EditPasscodeStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+    StepType<Payload, UserInput, ValidationResult, Validator>
+
+// 2. Define step and assign it to all related processes
+object CollectNewPasscode : DefinePasscodeStep<Unit, Passcode, Unit, DefaultNoOpValidator>, EditPasscodeStep<Unit, Passcode, Unit, DefaultNoOpValidator>
+```
+
+## Creating flow
 
 ## Observing flow state
 
