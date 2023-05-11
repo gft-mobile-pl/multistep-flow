@@ -12,6 +12,7 @@ open class StartMultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
     suspend operator fun <StepType : FlowStepType> invoke(
         currentStep: Step<StepType, *, *, *, *>
     ) = flow.mutex.withLock {
+        if (flow.session.isStarted) return@withLock
         flow.session.start(
             FlowState(
                 currentStep = currentStep as Step<*, *, *, *, *>,
