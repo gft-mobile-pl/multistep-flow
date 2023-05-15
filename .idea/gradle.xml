@@ -11,7 +11,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/example-app" />
+            <option value="$PROJECT_DIR$/example-snippets" />
+            <option value="$PROJECT_DIR$/example-snippets/domain" />
+            <option value="$PROJECT_DIR$/example-snippets/ui" />
             <option value="$PROJECT_DIR$/libraries" />
             <option value="$PROJECT_DIR$/libraries/observable-session" />
             <option value="$PROJECT_DIR$/multistep-flow" />

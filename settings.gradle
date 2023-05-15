@@ -13,6 +13,8 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Multistep Flow"
-include ':app'
+include ':example-app'
 include ':multistep-flow'
 include ':libraries:observable-session'
+include ':example-snippets:domain'
+include ':example-snippets:ui'
