@@ -29,7 +29,7 @@ val wildcardLoginFlowDomainModule = module {
     factory(WildcardLoginFlowQualifier) { StreamFlowStateUseCase<StepType<*, *, *, *>>(get(WildcardLoginFlowQualifier)) }
     factory(WildcardLoginFlowQualifier) { RequireStepUseCase(get(WildcardLoginFlowQualifier)) }
     factory(WildcardLoginFlowQualifier) { AwaitStepUseCase(get(WildcardLoginFlowQualifier)) }
-    factory(WildcardLoginFlowQualifier) { GetCurrentStepUseCase(get(WildcardLoginFlowQualifier)) }
+    factory(WildcardLoginFlowQualifier) { GetCurrentStepUseCase<StepType<*, *, *, *>>(get(WildcardLoginFlowQualifier)) }
     factory(WildcardLoginFlowQualifier) { SetStepUseCase<StepType<*, *, *, *>>(get(WildcardLoginFlowQualifier)) }
     factory(WildcardLoginFlowQualifier) { PerformActionUseCase(get(WildcardLoginFlowQualifier)) }
     factory(WildcardLoginFlowQualifier) { UpdateUserInputUseCase(get(WildcardLoginFlowQualifier)) }

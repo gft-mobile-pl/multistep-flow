@@ -19,7 +19,7 @@ internal class StartLoginFlowUseCase(loginFlow: LoginFlow) : StartMultiStepFlow<
 class EndLoginFlowUseCase(loginFlow: LoginFlow) : EndMultiStepFlow(loginFlow)
 class AwaitLoginStepUseCase(loginFlow: LoginFlow) : AwaitStepUseCase(loginFlow)
 class ClearLoginFlowErrorUseCase(loginFlow: LoginFlow) : ClearErrorUseCase(loginFlow)
-class GetCurrentLoginStepUseCase(loginFlow: LoginFlow) : GetCurrentStepUseCase(loginFlow)
+class GetCurrentLoginStepUseCase(loginFlow: LoginFlow) : GetCurrentStepUseCase<LoginStep<*, *, *, *>>(loginFlow)
 class GetLoginStepFromHistoryUseCase(loginFlow: LoginFlow) : GetStepFromHistoryUseCase(loginFlow)
 class GoBackToLoginStepUseCase(loginFlow: LoginFlow) : GoBackToStepUseCase<LoginStep<*, *, *, *>>(loginFlow)
 class PerformLoginActionUseCase(loginFlow: LoginFlow) : PerformActionUseCase(loginFlow)
