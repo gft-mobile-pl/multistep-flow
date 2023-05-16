@@ -7,7 +7,7 @@ import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.StartMultiStepFlow
 
-class StartLoginFlowUseCase(
+class BeginLoginUseCase(
     private val startMultiStepFlow: StartMultiStepFlow<StepType<*, *, *, *>>
 ) {
     suspend operator fun invoke() {

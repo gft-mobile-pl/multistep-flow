@@ -20,7 +20,7 @@ class PasswordFormatValidator : UserInputValidator<Password, PasswordFormatValid
                 else -> FORMAT_VALID
             }
         } else {
-            FORMAT_VALID
+            currentValidationResult
         }
     }
 }

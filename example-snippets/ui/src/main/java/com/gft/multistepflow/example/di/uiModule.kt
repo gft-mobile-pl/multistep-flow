@@ -1,4 +1,4 @@
-package com.gft.multistepflow.example.ui.di
+package com.gft.multistepflow.example.di
 
 import com.gft.multistepflow.example.di.WildcardLoginFlowQualifier
 import com.gft.multistepflow.example.ui.wildcard.CollectUsernameViewModel

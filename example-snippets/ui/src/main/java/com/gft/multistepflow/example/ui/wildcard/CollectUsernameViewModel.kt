@@ -4,8 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.gft.multistepflow.example.domain.wildcard.actions.getAcceptUsernameAction
 import com.gft.multistepflow.example.domain.wildcard.model.CollectUsername
 import com.gft.multistepflow.example.domain.wildcard.model.Username
-import com.gft.multistepflow.example.domain.wildcard.usecases.StartLoginFlowUseCase
-import com.gft.multistepflow.example.domain.wildcard.utils.launchUndispatched
+import com.gft.multistepflow.example.domain.wildcard.usecases.BeginLoginUseCase
+import com.gft.multistepflow.example.domain.utils.launchUndispatched
 import com.gft.multistepflow.example.ui.wildcard.ProvideUsernameNavigationEffect.NavigateBack
 import com.gft.multistepflow.example.ui.wildcard.ProvideUsernameNavigationEffect.NavigateToNextScreen
 import com.gft.multistepflow.model.StepType
@@ -18,17 +18,12 @@ import com.gft.multistepflow.utils.filterByStepType
 import com.gft.mvi.BaseMviViewModel
 import com.gft.mvi.ViewEffect
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
 class CollectUsernameViewModel(
-    private val startLoginFlow: StartLoginFlowUseCase,
+    private val beginLogin: BeginLoginUseCase,
     private val endLoginFlow: EndMultiStepFlow,
     private val performAction: PerformActionUseCase,
     private val updateUserInput: UpdateUserInputUseCase,
@@ -38,6 +33,9 @@ class CollectUsernameViewModel(
     ProvideUsernameViewState(username = "", isLoadingIndicatorVisible = false)
 ) {
     init {
+        viewModelScope.launchUndispatched {
+            beginLogin()
+        }
         startViewStateUpdates()
         startNavigationEffectUpdates()
     }

@@ -2,7 +2,7 @@ package com.gft.multistepflow.example.di
 
 import com.gft.multistepflow.example.domain.wildcard.actions.AcceptUsername
 import com.gft.multistepflow.example.domain.wildcard.model.WildcardLoginFlow
-import com.gft.multistepflow.example.domain.wildcard.usecases.StartLoginFlowUseCase
+import com.gft.multistepflow.example.domain.wildcard.usecases.BeginLoginUseCase
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.AwaitStepUseCase
 import com.gft.multistepflow.usecases.EndMultiStepFlow
@@ -21,7 +21,7 @@ val WildcardLoginFlowQualifier = named("WildcardLoginFlowQualifier")
 val wildcardLoginFlowDomainModule = module {
     single(WildcardLoginFlowQualifier) { WildcardLoginFlow() }
 
-    factory { StartLoginFlowUseCase(get(WildcardLoginFlowQualifier)) }
+    factory { BeginLoginUseCase(get(WildcardLoginFlowQualifier)) }
 
     factory(WildcardLoginFlowQualifier) { StartMultiStepFlow<StepType<*, *, *, *>>(get(WildcardLoginFlowQualifier)) }
     factory(WildcardLoginFlowQualifier) { EndMultiStepFlow(get(WildcardLoginFlowQualifier)) }
