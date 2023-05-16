@@ -17,14 +17,14 @@ class StartMultiStepFlowUseCaseTest {
 
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
-    private lateinit var startMultiStepFlow: StartMultiStepFlow<TestStepType<*, *, *, *>>
+    private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
 
     @Test
     fun `when the flow is started and history is disabled then history is empty`() {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = false)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -41,7 +41,7 @@ class StartMultiStepFlowUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when

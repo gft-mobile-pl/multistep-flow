@@ -23,14 +23,14 @@ class RequireStepUseCaseTest {
     }
 
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
-    private lateinit var startMultiStepFlow: StartMultiStepFlow<TestStepType<*, *, *, *>>
+    private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
     private lateinit var requireStep: RequireStepUseCase
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
 
     @Before
     fun setUp() {
         testFlow = MultiStepFlow(historyEnabled = true)
-        startMultiStepFlow = StartMultiStepFlow(testFlow)
+        startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
         requireStep = RequireStepUseCase(testFlow)
         setStep = SetStepUseCase(testFlow)
     }

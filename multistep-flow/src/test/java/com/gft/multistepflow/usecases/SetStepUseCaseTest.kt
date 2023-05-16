@@ -21,14 +21,14 @@ internal class SetStepUseCaseTest {
 
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
-    private lateinit var startMultiStepFlow: StartMultiStepFlow<TestStepType<*, *, *, *>>
+    private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
 
     @Test
     fun `when the history is disabled and new step is set then history is empty`() {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = false)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -46,7 +46,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -69,7 +69,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -94,7 +94,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = false)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -114,7 +114,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -140,7 +140,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -166,7 +166,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -192,7 +192,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -213,7 +213,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -241,7 +241,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -268,7 +268,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -296,7 +296,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -323,7 +323,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -351,7 +351,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -380,7 +380,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -409,7 +409,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when
@@ -437,7 +437,7 @@ internal class SetStepUseCaseTest {
         runBlocking {
             //given
             testFlow = MultiStepFlow(historyEnabled = true)
-            startMultiStepFlow = StartMultiStepFlow(testFlow)
+            startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
             setStep = SetStepUseCase(testFlow)
 
             //when

@@ -5,10 +5,10 @@ import com.gft.multistepflow.example.domain.wildcard.model.UnrelatedStep
 import com.gft.multistepflow.example.domain.wildcard.model.Username
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
-import com.gft.multistepflow.usecases.StartMultiStepFlow
+import com.gft.multistepflow.usecases.StartMultiStepFlowUseCase
 
 class BeginLoginUseCase(
-    private val startMultiStepFlow: StartMultiStepFlow<StepType<*, *, *, *>>
+    private val startMultiStepFlow: StartMultiStepFlowUseCase<StepType<*, *, *, *>>
 ) {
     suspend operator fun invoke() {
         startMultiStepFlow(

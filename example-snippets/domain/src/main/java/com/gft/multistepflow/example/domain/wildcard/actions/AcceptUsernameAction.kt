@@ -13,7 +13,7 @@ import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.RequireStepUseCase
 import com.gft.multistepflow.usecases.SetStepUseCase
 
-class AcceptUsername(
+class AcceptUsernameAction(
     private val requireStepUseCase: RequireStepUseCase,
     private val setStep: SetStepUseCase<StepType<*, *, *, *>>
 ) : Action() {
@@ -43,4 +43,4 @@ class AcceptUsername(
     }
 }
 
-fun Step.Actions<CollectUsername>.getAcceptUsernameAction() = provideAction<AcceptUsername>()
+fun Step.Actions<CollectUsername>.getAcceptUsernameAction() = provideAction<AcceptUsernameAction>()

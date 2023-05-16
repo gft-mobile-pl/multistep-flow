@@ -8,7 +8,7 @@ import OnboardingStep.ConfirmTermsAndConditions
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
-import com.gft.multistepflow.usecases.StartMultiStepFlow
+import com.gft.multistepflow.usecases.StartMultiStepFlowUseCase
 import com.gft.multistepflow.usecases.UpdateUserInputUseCase
 import com.gft.multistepflow.validators.BaseUserInputValidator
 import com.gft.multistepflow.validators.CompositeUserInputValidator
@@ -26,7 +26,7 @@ class FlowTest {
         val step = Step(CollectUserName, "payload", "empty username", 5)
 
         val testFlow = OnboardingFlow()
-        val startFlow = StartMultiStepFlow(testFlow)
+        val startFlow = StartMultiStepFlowUseCase(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
@@ -48,7 +48,7 @@ class FlowTest {
         val step = Step(ConfirmTermsAndConditions, "payload", 0)
 
         val testFlow = OnboardingFlow()
-        val startFlow = StartOnboardingFlow(testFlow)
+        val startFlow = StartOnboardingFlowUseCase(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
@@ -75,7 +75,7 @@ class FlowTest {
         )
 
         val testFlow = OnboardingFlow()
-        val startFlow = StartMultiStepFlow(testFlow)
+        val startFlow = StartMultiStepFlowUseCase(testFlow)
         startFlow(step)
 
         val updateUseCase = UpdateUserInputUseCase(testFlow)
@@ -175,4 +175,4 @@ sealed interface OnboardingStep<Payload, UserInput, ValidationResult, Validator 
 
 class OnboardingFlow : MultiStepFlow<OnboardingStep<*, *, *, *>>(true)
 
-class StartOnboardingFlow(flow: OnboardingFlow) : StartMultiStepFlow<OnboardingStep<*, *, *, *>>(flow)
+class StartOnboardingFlowUseCase(flow: OnboardingFlow) : StartMultiStepFlowUseCase<OnboardingStep<*, *, *, *>>(flow)

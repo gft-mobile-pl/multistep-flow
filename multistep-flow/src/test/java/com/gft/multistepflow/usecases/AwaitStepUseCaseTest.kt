@@ -23,14 +23,14 @@ internal class AwaitStepUseCaseTest {
     }
 
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
-    private lateinit var startMultiStepFlow: StartMultiStepFlow<TestStepType<*, *, *, *>>
+    private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
     private lateinit var awaitStep: AwaitStepUseCase
 
     @Before
     fun setUp() {
         testFlow = MultiStepFlow(historyEnabled = true)
-        startMultiStepFlow = StartMultiStepFlow(testFlow)
+        startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
         awaitStep = AwaitStepUseCase(testFlow)
         setStep = SetStepUseCase(testFlow)
     }

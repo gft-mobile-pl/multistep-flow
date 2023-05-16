@@ -5,7 +5,7 @@ import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.SetStepUseCase
-import com.gft.multistepflow.usecases.StartMultiStepFlow
+import com.gft.multistepflow.usecases.StartMultiStepFlowUseCase
 import com.gft.multistepflow.utils.StepsFilteringTest.TestStepType.*
 import com.gft.multistepflow.validators.BaseUserInputValidator
 import com.gft.multistepflow.validators.DefaultNoOpValidator
@@ -38,12 +38,12 @@ internal class StepsFilteringTest {
 
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
-    private lateinit var startMultiStepFlow: StartMultiStepFlow<TestStepType<*, *, *, *>>
+    private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
 
     @Before
     fun setUp() {
         testFlow = MultiStepFlow(historyEnabled = true)
-        startMultiStepFlow = StartMultiStepFlow(testFlow)
+        startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
         setStep = SetStepUseCase(testFlow)
     }
 

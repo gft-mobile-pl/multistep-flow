@@ -10,7 +10,7 @@ import com.gft.multistepflow.example.ui.wildcard.ProvideUsernameNavigationEffect
 import com.gft.multistepflow.example.ui.wildcard.ProvideUsernameNavigationEffect.NavigateToNextScreen
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.AwaitStepUseCase
-import com.gft.multistepflow.usecases.EndMultiStepFlow
+import com.gft.multistepflow.usecases.EndMultiStepFlowUseCase
 import com.gft.multistepflow.usecases.PerformActionUseCase
 import com.gft.multistepflow.usecases.StreamFlowStateUseCase
 import com.gft.multistepflow.usecases.UpdateUserInputUseCase
@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 
 class CollectUsernameViewModel(
     private val beginLogin: BeginLoginUseCase,
-    private val endLoginFlow: EndMultiStepFlow,
+    private val endLoginFlow: EndMultiStepFlowUseCase,
     private val performAction: PerformActionUseCase,
     private val updateUserInput: UpdateUserInputUseCase,
     private val awaitStepUseCase: AwaitStepUseCase,

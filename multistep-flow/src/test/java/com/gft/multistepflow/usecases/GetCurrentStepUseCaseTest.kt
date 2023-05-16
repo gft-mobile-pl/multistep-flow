@@ -22,14 +22,14 @@ internal class GetCurrentStepUseCaseTest {
     }
 
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
-    private lateinit var startMultiStepFlow: StartMultiStepFlow<TestStepType<*, *, *, *>>
+    private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
     private lateinit var getCurrentStep: GetCurrentStepUseCase
 
     @Before
     fun setUp() {
         testFlow = MultiStepFlow(historyEnabled = true)
-        startMultiStepFlow = StartMultiStepFlow(testFlow)
+        startMultiStepFlow = StartMultiStepFlowUseCase(testFlow)
         getCurrentStep = GetCurrentStepUseCase(testFlow)
         setStep = SetStepUseCase(testFlow)
     }
