@@ -1,13 +1,13 @@
-package com.gft.multistepflow.example.ui
+package com.gft.multistepflow.example.openflow.ui
 
 import androidx.lifecycle.viewModelScope
-import com.gft.multistepflow.example.domain.actions.getAcceptUsernameAction
-import com.gft.multistepflow.example.domain.model.CollectUsername
-import com.gft.multistepflow.example.domain.model.Username
-import com.gft.multistepflow.example.domain.usecases.BeginLoginUseCase
-import com.gft.multistepflow.example.domain.utils.launchUndispatched
-import com.gft.multistepflow.example.ui.ProvideUsernameNavigationEffect.NavigateBack
-import com.gft.multistepflow.example.ui.ProvideUsernameNavigationEffect.NavigateToNextScreen
+import com.gft.multistepflow.example.openflow.domain.actions.getAcceptUsernameAction
+import com.gft.multistepflow.example.openflow.domain.model.CollectUsername
+import com.gft.multistepflow.example.openflow.domain.model.Username
+import com.gft.multistepflow.example.openflow.domain.usecases.BeginLoginUseCase
+import com.gft.multistepflow.example.openflow.domain.utils.launchUndispatched
+import com.gft.multistepflow.example.openflow.ui.ProvideUsernameNavigationEffect.NavigateBack
+import com.gft.multistepflow.example.openflow.ui.ProvideUsernameNavigationEffect.NavigateToNextScreen
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.AwaitStepUseCase
 import com.gft.multistepflow.usecases.EndMultiStepFlowUseCase

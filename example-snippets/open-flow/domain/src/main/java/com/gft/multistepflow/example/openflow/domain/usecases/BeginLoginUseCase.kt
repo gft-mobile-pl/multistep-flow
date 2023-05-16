@@ -1,8 +1,8 @@
-package com.gft.multistepflow.example.domain.usecases
+package com.gft.multistepflow.example.openflow.domain.usecases
 
-import com.gft.multistepflow.example.domain.model.CollectUsername
-import com.gft.multistepflow.example.domain.model.UnrelatedStep
-import com.gft.multistepflow.example.domain.model.Username
+import com.gft.multistepflow.example.openflow.domain.model.CollectUsername
+import com.gft.multistepflow.example.openflow.domain.model.UnrelatedStep
+import com.gft.multistepflow.example.openflow.domain.model.Username
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.StartMultiStepFlowUseCase

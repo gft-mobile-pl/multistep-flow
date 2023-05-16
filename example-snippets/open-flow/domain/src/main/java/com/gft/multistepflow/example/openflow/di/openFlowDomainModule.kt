@@ -1,8 +1,8 @@
-package com.gft.multistepflow.example.di
+package com.gft.multistepflow.example.openflow.di
 
-import com.gft.multistepflow.example.domain.actions.AcceptUsernameAction
-import com.gft.multistepflow.example.domain.model.WildcardLoginFlow
-import com.gft.multistepflow.example.domain.usecases.BeginLoginUseCase
+import com.gft.multistepflow.example.openflow.domain.actions.AcceptUsernameAction
+import com.gft.multistepflow.example.openflow.domain.model.WildcardLoginFlow
+import com.gft.multistepflow.example.openflow.domain.usecases.BeginLoginUseCase
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.usecases.AwaitStepUseCase
 import com.gft.multistepflow.usecases.EndMultiStepFlowUseCase

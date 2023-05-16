@@ -1,10 +1,10 @@
-package com.gft.multistepflow.example.domain.actions
+package com.gft.multistepflow.example.openflow.domain.actions
 
-import com.gft.multistepflow.example.domain.model.CollectPassword
-import com.gft.multistepflow.example.domain.model.CollectUsername
-import com.gft.multistepflow.example.domain.model.Password
-import com.gft.multistepflow.example.domain.model.PasswordFormatValidationResult
-import com.gft.multistepflow.example.domain.model.UnrelatedStep
+import com.gft.multistepflow.example.openflow.domain.model.CollectPassword
+import com.gft.multistepflow.example.openflow.domain.model.CollectUsername
+import com.gft.multistepflow.example.openflow.domain.model.Password
+import com.gft.multistepflow.example.openflow.domain.model.PasswordFormatValidationResult
+import com.gft.multistepflow.example.openflow.domain.model.UnrelatedStep
 import com.gft.multistepflow.model.Action
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType

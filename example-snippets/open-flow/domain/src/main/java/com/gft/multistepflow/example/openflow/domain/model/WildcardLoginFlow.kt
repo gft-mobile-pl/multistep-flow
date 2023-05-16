@@ -1,4 +1,4 @@
-package com.gft.multistepflow.example.domain.model
+package com.gft.multistepflow.example.openflow.domain.model
 
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.StepType

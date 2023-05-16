@@ -1,7 +1,7 @@
-package com.gft.multistepflow.example.domain.validators
+package com.gft.multistepflow.example.openflow.domain.validators
 
-import com.gft.multistepflow.example.domain.model.PhoneNumber
-import com.gft.multistepflow.example.domain.model.PhoneNumberValidationResult
+import com.gft.multistepflow.example.openflow.domain.model.PhoneNumber
+import com.gft.multistepflow.example.openflow.domain.model.PhoneNumberValidationResult
 import com.gft.multistepflow.validators.CompositeUserInputValidator
 
 class PhoneNumberFormatValidator : CompositeUserInputValidator<PhoneNumber, PhoneNumberValidationResult>() {

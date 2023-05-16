@@ -1,7 +1,7 @@
-package com.gft.multistepflow.example.domain.model
+package com.gft.multistepflow.example.openflow.domain.model
 
-import com.gft.multistepflow.example.domain.validators.PasswordFormatValidator
-import com.gft.multistepflow.example.domain.validators.PhoneNumberFormatValidator
+import com.gft.multistepflow.example.openflow.domain.validators.PasswordFormatValidator
+import com.gft.multistepflow.example.openflow.domain.validators.PhoneNumberFormatValidator
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.validators.DefaultNoOpValidator
 

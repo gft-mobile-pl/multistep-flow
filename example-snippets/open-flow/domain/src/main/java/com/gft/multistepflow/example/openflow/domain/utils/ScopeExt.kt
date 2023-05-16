@@ -1,4 +1,4 @@
-package com.gft.multistepflow.example.domain.utils
+package com.gft.multistepflow.example.openflow.domain.utils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

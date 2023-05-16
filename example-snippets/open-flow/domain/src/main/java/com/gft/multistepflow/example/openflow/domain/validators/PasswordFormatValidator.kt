@@ -1,10 +1,10 @@
-package com.gft.multistepflow.example.domain.validators
+package com.gft.multistepflow.example.openflow.domain.validators
 
-import com.gft.multistepflow.example.domain.model.Password
-import com.gft.multistepflow.example.domain.model.PasswordFormatValidationResult
-import com.gft.multistepflow.example.domain.model.PasswordFormatValidationResult.FORMAT_VALID
-import com.gft.multistepflow.example.domain.model.PasswordFormatValidationResult.TOO_LONG
-import com.gft.multistepflow.example.domain.model.PasswordFormatValidationResult.TOO_SHORT
+import com.gft.multistepflow.example.openflow.domain.model.Password
+import com.gft.multistepflow.example.openflow.domain.model.PasswordFormatValidationResult
+import com.gft.multistepflow.example.openflow.domain.model.PasswordFormatValidationResult.FORMAT_VALID
+import com.gft.multistepflow.example.openflow.domain.model.PasswordFormatValidationResult.TOO_LONG
+import com.gft.multistepflow.example.openflow.domain.model.PasswordFormatValidationResult.TOO_SHORT
 import com.gft.multistepflow.validators.UserInputValidator
 
 class PasswordFormatValidator : UserInputValidator<Password, PasswordFormatValidationResult> {

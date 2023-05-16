@@ -1,4 +1,4 @@
-package com.gft.multistepflow.example.ui
+package com.gft.multistepflow.example.openflow.ui
 
 import com.gft.mvi.NavigationEffect
 import com.gft.mvi.ViewEvent
