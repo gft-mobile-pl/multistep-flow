@@ -15,6 +15,7 @@ dependencyResolutionManagement {
 rootProject.name = "Multistep Flow"
 include ':example-app'
 include ':multistep-flow'
+include ':libraries:mvi'
 include ':libraries:observable-session'
 include ':example-snippets:domain'
 include ':example-snippets:ui'
