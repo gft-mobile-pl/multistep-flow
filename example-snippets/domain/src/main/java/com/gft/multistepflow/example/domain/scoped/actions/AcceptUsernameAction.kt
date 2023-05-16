@@ -1,11 +1,9 @@
 package com.gft.multistepflow.example.domain.scoped.actions
 
-import com.gft.multistepflow.example.domain.scoped.model.LoginStep
 import com.gft.multistepflow.example.domain.scoped.model.LoginStep.CollectPassword
 import com.gft.multistepflow.example.domain.scoped.model.LoginStep.CollectUsername
 import com.gft.multistepflow.example.domain.scoped.model.Password
 import com.gft.multistepflow.example.domain.scoped.model.PasswordFormatValidationResult
-import com.gft.multistepflow.example.domain.scoped.model.UnrelatedStep
 import com.gft.multistepflow.example.domain.scoped.usecases.RequireLoginStepUseCase
 import com.gft.multistepflow.example.domain.scoped.usecases.SetLoginStepUseCase
 import com.gft.multistepflow.example.domain.utils.provideAction
@@ -13,7 +11,7 @@ import com.gft.multistepflow.example.domain.utils.provideValidator
 import com.gft.multistepflow.model.Action
 import com.gft.multistepflow.model.Step
 
-class AcceptUsername(
+class AcceptUsernameAction(
     private val requireStepUseCase: RequireLoginStepUseCase,
     private val setStep: SetLoginStepUseCase
 ) : Action() {
@@ -43,4 +41,4 @@ class AcceptUsername(
     }
 }
 
-fun Step.Actions<CollectUsername>.getAcceptUsernameAction() = provideAction<AcceptUsername>()
+fun Step.Actions<CollectUsername>.getAcceptUsernameAction() = provideAction<AcceptUsernameAction>()

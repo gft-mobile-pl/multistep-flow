@@ -17,7 +17,7 @@ class PasswordFormatValidator : UserInputValidator<Password, PasswordFormatValid
                 else -> PasswordFormatValidationResult.FORMAT_VALID
             }
         } else {
-            PasswordFormatValidationResult.FORMAT_VALID
+            currentValidationResult
         }
     }
 }
