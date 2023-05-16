@@ -1,7 +1,5 @@
 package com.gft.multistepflow.example.domain.wildcard.actions
 
-import com.gft.multistepflow.example.domain.utils.provideAction
-import com.gft.multistepflow.example.domain.utils.provideValidator
 import com.gft.multistepflow.example.domain.wildcard.model.CollectPassword
 import com.gft.multistepflow.example.domain.wildcard.model.CollectUsername
 import com.gft.multistepflow.example.domain.wildcard.model.Password
@@ -10,6 +8,8 @@ import com.gft.multistepflow.example.domain.wildcard.model.UnrelatedStep
 import com.gft.multistepflow.model.Action
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
+import com.gft.multistepflow.providers.provideAction
+import com.gft.multistepflow.providers.provideValidator
 import com.gft.multistepflow.usecases.RequireStepUseCase
 import com.gft.multistepflow.usecases.SetStepUseCase
 

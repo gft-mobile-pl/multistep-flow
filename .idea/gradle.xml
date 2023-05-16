@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/libraries/mvi" />
             <option value="$PROJECT_DIR$/libraries/observable-session" />
             <option value="$PROJECT_DIR$/multistep-flow" />
+            <option value="$PROJECT_DIR$/multistep-flow-koin" />
           </set>
         </option>
       </GradleProjectSettings>

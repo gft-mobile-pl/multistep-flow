@@ -5,9 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':multistep-flow')
-    implementation project(':multistep-flow-koin')
     implementation "io.insert-koin:koin-core:3.4.0"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
 }
 
 java {
