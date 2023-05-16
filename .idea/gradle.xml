@@ -13,8 +13,12 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/example-app" />
             <option value="$PROJECT_DIR$/example-snippets" />
-            <option value="$PROJECT_DIR$/example-snippets/domain" />
-            <option value="$PROJECT_DIR$/example-snippets/ui" />
+            <option value="$PROJECT_DIR$/example-snippets/open-flow" />
+            <option value="$PROJECT_DIR$/example-snippets/open-flow/domain" />
+            <option value="$PROJECT_DIR$/example-snippets/open-flow/ui" />
+            <option value="$PROJECT_DIR$/example-snippets/sealed-flow" />
+            <option value="$PROJECT_DIR$/example-snippets/sealed-flow/domain" />
+            <option value="$PROJECT_DIR$/example-snippets/sealed-flow/ui" />
             <option value="$PROJECT_DIR$/libraries" />
             <option value="$PROJECT_DIR$/libraries/mvi" />
             <option value="$PROJECT_DIR$/libraries/observable-session" />

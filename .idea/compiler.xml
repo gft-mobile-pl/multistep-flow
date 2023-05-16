@@ -4,6 +4,7 @@
     <bytecodeTargetLevel target="1.7">
       <module name="Multistep_Flow.app" target="17" />
       <module name="Multistep_Flow.example" target="17" />
+      <module name="Multistep_Flow.example-snippets.ui" target="17" />
       <module name="Multistep_Flow.observable-session.main" target="11" />
       <module name="Multistep_Flow.observable-session.test" target="11" />
     </bytecodeTargetLevel>
