@@ -2,17 +2,25 @@
 
 [[_TOC_]]
 
-The Multistep Flow library enables the description of complex processes by dividing them into steps 
-and provides a set of mechanisms for managing traversal between them. 
-Flowy also supports gathering information provided by the user and managing errors that may occur 
+The **Multistep Flow** library enables the description of complex processes by dividing them into steps 
+and provides a set of mechanisms for managing traversal between them.
+**Multistep Flow** also supports gathering information provided by the user and managing errors that may occur 
 during the process. With the help of Multistep Flow, both local processes and remate processes can be modeled.
 
 # Usage
 
-## Defining steps
+## Defining flows
+
+We use a term `Flow` for a process that is modelled with **Multistep Flow** library. Each flow is described by:
+- multiple step definitions in form of `StepType-s`
+- an instance of `MultiStepFlow` which is responsible for hosting the instances of `Step-s`.
+
+Each flow is managed with a bunch of use-cases which will be described later.
+
+### Defining steps
 
 All steps are instances of the `Step` class and are created by either domain-level components 
-such as `Actions` and repositories, or by data-level components (e.g. services) in remotely controlled processes.
+such as `Actions` and repositories, or by data-level components (e.g. services) in case of remotely controlled processes.
 Each step has a type, which is defined by implementing the `StepType` interface.
 
 ```kotlin
@@ -21,16 +29,16 @@ interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInp
 
 While implementing the `StepType` interface one need to define a few generic types:
 
-- Payload - contains data required by a view and actions. 
+- **Payload** - contains data required by a view and actions. 
 This data can either be defined locally or retrieved from a remote service, such as Zoral. 
 It is important to note that if certain data can be obtained through alternative means, it is advisable not to include it in the payload.
 While payloads are typically static, they can occasionally be modified by actions (e.g. Zoral may return same step with a modified payload).
-- UserInput - contains data provided by a user or that can edited by a user. UserInput may be prepopulated with a data that comes 
+- **UserInput** - contains data provided by a user or that can edited by a user. UserInput may be prepopulated with a data that comes 
 from a remote service, previous steps etc. Use input may be updated with a `UpdateUserInputUseCase` or its descendants.
-- ValidationResult - contains data describing the result of the validation of the user input. If a validator is defined
+- **ValidationResult** - contains data describing the result of the validation of the user input. If a validator is defined
 for the step, the validation occurs automatically each time a user input is updated with `UpdateUserInputUseCase`. 
 Validation result may also come from a remote service in case of a remotely controlled processes.
-- Validator - a component implementing `UserInputValidator` interface responsible for performing user input validation.
+- **Validator** - a component implementing `UserInputValidator` interface responsible for performing user input validation.
 Validation is performed each the user input is updated as a result of user action. Note that if the user input is changed by a remote service 
 (that is same step is returned with a different user input) the `Validator` will not be applied to the user input automatically.
 
@@ -50,71 +58,131 @@ enum class PasswordValidationResult {
 }
 
 object CollectUsername : StepType<Unit, Username, Unit, DefaultNoOpValidator>
-object CollectPassword : StepType<Unit, Password, PasswordValidationResult, MinLengthValidator>
+object CollectPassword : StepType<Unit, Password, PasswordValidationResult?, MinLengthValidator>
 ```
 In this example two step types are defined. They do not provide `Payload` (`Unit` is used), but allow the user to provide and edit `Username` and `Password`.
 `CollectPassword` defines that `MinLengthValidator` will be applied to the user input and the result of validation is of `PasswordValidationResult` type.
 
-> Tip: in the example above the `object` is used while defining step types. 
+In order to create a step of a given type it is enough to instantiate a `Step` class:
+```kotlin
+val collectUsernameStep = Step(
+    type = CollectUsername,
+    payload = Unit,
+    userInput = Username("")
+)
+
+val collectPasswordStep = Step(
+    type = CollectPassword,
+    payload = Unit,
+    userInput = Password(""),
+    validationResult = null,
+    validator = MinLengthValidator()
+)
+```
+
+> 💡 In the example above the `object` is used while defining step types. 
 > Although one could use `interface` instead, the API of this library almost always expects **instances** of the step types. 
 > <br />Just use `objects`. You have been warned ;)  
 
-> Primitive types may be used instead of `value class` for `Payload`, `UserInput` and `ValidationResult`. 
+> ⚠ Primitive types may be used instead of `value class` for `Payload`, `UserInput` and `ValidationResult`. 
 > However, the use of more meaningful types is always suggested.
 
-### Grouping steps
 
-More than often it is useful to group all the steps that constitute a particular process/flow by utilizing the `sealed interface`:
+
+### Open-flow
+
+Open-flow is a set of steps which types are defined independently, e.g.
+
 ```kotlin
-sealed interface LoginStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
-    StepType<Payload, UserInput, ValidationResult, Validator> {
-    
-    object CollectUsername : LoginStep<Unit, Username, Unit, DefaultNoOpValidator>
-    object CollectPassword : LoginStep<Unit, Password, Int, MinLengthValidator>
+object CollectUsername: StepType<Unit, Username, Unit, DefaultNoOpValidator>
+object CollectPassword: StepType<Unit, Password, PasswordFormatValidationResult, PasswordFormatValidator>
+object CollectPhoneNumber : StepType<DisplayName, PhoneNumber, PhoneNumberValidationResult, PhoneNumberFormatValidator>
+object CollectOtp : StepType<DisplayName, Otp, PasswordFormatValidationResult, DefaultNoOpValidator>
+```
+> ℹ Although these steps are logically connected, the relationship between them is not defined in the code.
+
+As the steps are not related one need to provide a `StepType` for the generic parameter of `MultistepFlow`:
+```kotlin
+val loginFlow = MultistepFlow<StepType<*, *, *, *>>(historyEnabled = true)
+val onboardingFlow = MultistepFlow<StepType<*, *, *, *>>(historyEnabled = true)
+```
+
+> ⚠ From the DI perspective the `loginFlow` and `onboardingFlow` are indistinguishable. There are two solutions to this problem:
+> - `Qualifiers`
+> - creating separate classes for each flow, e.g.
+>  ```kotlin
+>  class LoginFlow : MultistepFlow<StepType<*, *, *, *>>(historyEnabled = true)
+>  class OnboardingFlow : MultistepFlow<StepType<*, *, *, *>>(historyEnabled = true)
+>  ```
+
+### Sealed-flow
+
+Sealed-flow is a set of steps which types inherit from the same base sealed step type, e.g.
+```kotlin
+sealed interface LoginStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator> {
+    object CollectUsername: LoginStep<Unit, Username, Unit, DefaultNoOpValidator>
+    object CollectPassword: LoginStep<Unit, Password, PasswordFormatValidationResult, PasswordFormatValidator>
+    object CollectPhoneNumber : LoginStep<DisplayName, PhoneNumber, PhoneNumberValidationResult, PhoneNumberFormatValidator>
+    object CollectOtp : LoginStep<DisplayName, Otp, PasswordFormatValidationResult, DefaultNoOpValidator>
 }
 ```
 
-Note: In Kotlin you may define "children" of the `sealed interface` anywhere within the same package. 
-It means that you may achieve the same result with the following code:
+> 💡 The generics part of the `LoginStep` definition may look scary, but fortunately it is the same for all base step types and does not require editing.
+> You may simply copy/paste the following part:
+> ```
+> <Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator>
+> ```
+
+As all the step types inherit from the same base type (e.g. `LoginStep`) one may create a `MultistepFlow` which can host only steps of a particular:
 ```kotlin
-// base step type (interface)
+val loginFlow = MultistepFlow<LoginStep<*, *, *, *>>(historyEnabled = true)
+val onboardingFlow = MultistepFlow<OnboardingStep<*, *, *, *>>(historyEnabled = true)
+```
+> ⚠ Unfortunately **Koin** does not support generics and won't be able to distinguish `MultistepFlow<LoginStep<*, *, *, *>>` from `MultistepFlow<OnboardingStep<*, *, *, *>>`.
+> You need to address this problem with qualifiers or create separate classes for each flow - check similar comment to "Open-flow".
+> This issue does not affect **Dagger** or **Hilt** 
+
+There are several advantages of using sealed-flows:
+- exhaustive `when` can be used while dealing with the step types,
+- unrelated steps cannot be inserted into `MultistepFlow`,
+- use-cases that manages the flow can be typed to the base type which prevents their usage with unrelated flow.
+
+#### Using same step in multiple flows
+
+In Kotlin you may define "children" of the `sealed interface` anywhere within the same package, even in a different file: 
+```kotlin
+// file1.kt
 sealed interface LoginStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
     StepType<Payload, UserInput, ValidationResult, Validator>
 
-// concrete step types (objects)
-object CollectUsername : LoginStep<Unit, Username, Unit, DefaultNoOpValidator>
-object CollectPassword : LoginStep<Unit, Password, Int, MinLengthValidator>
+// file2.kt
+object CollectUsername: LoginStep<Unit, Username, Unit, DefaultNoOpValidator>
+object CollectPassword: LoginStep<Unit, Password, PasswordFormatValidationResult, PasswordFormatValidator>
+object CollectPhoneNumber : LoginStep<DisplayName, PhoneNumber, PhoneNumberValidationResult, PhoneNumberFormatValidator>
+object CollectOtp : LoginStep<DisplayName, Otp, PasswordFormatValidationResult, DefaultNoOpValidator>
 ```
-Both code snippets look very similar, but the second approach allows the step types to be defined in a different file than base step type as long it is placed in the same package.
-This may be useful if you want to reuse the same step in a few related processes (you may find more on this below).
 
-**Notes on generics**
-
-Unfortunately, due to the way generics work, you must always include this static part in the base step interface definition:
-```kotlin
-<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator>
-```
-Simply copy/paste it as needed without any modifications.
-
-#### Using same step in multiple processes
-
-Sometimes one may want to use the same step within a few related processes.
+This language feature make it possible to use the same step within a few flows:
 ```kotlin
 @JvmInline
 value class Passcode(val value: String)
 
-// 1. Define the base step type for each process
-sealed interface DefinePasscodeStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
-    StepType<Payload, UserInput, ValidationResult, Validator>
+// 1. Define the base step type for each flow
+sealed interface DefinePasscodeStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator>
+sealed interface EditPasscodeStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> : StepType<Payload, UserInput, ValidationResult, Validator>
 
-sealed interface EditPasscodeStep<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
-    StepType<Payload, UserInput, ValidationResult, Validator>
+// 2. Define step and assign it to all related flow
+object CollectNewPasscode : 
+    DefinePasscodeStep<Unit, Passcode, Unit, DefaultNoOpValidator>, 
+    EditPasscodeStep<Unit, Passcode, Unit, DefaultNoOpValidator>
 
-// 2. Define step and assign it to all related processes
-object CollectNewPasscode : DefinePasscodeStep<Unit, Passcode, Unit, DefaultNoOpValidator>, EditPasscodeStep<Unit, Passcode, Unit, DefaultNoOpValidator>
+// 3. Create flows
+val definePasscodeFlow = MultistepFlow<DefinePasscodeStep<*, *, *, *>>(historyEnabled = true)
+val editPasscodeFlow = MultistepFlow<EditPasscodeStep<*, *, *, *>>(historyEnabled = true)
 ```
 
-## Creating flow
+Such optimization may be tempting, but most of the time it is better to define a few similar steps (one for each flow) for improved readability. 
+Note that all the use-cases provided by **Multistep Flow** library support managing multiple step types at the same time.
 
 ## Observing flow state
 
