@@ -26,16 +26,6 @@ fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload,
     }
 }
 
-internal fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload, UserInput, ValidationResult> Step<*, *, *, *, *>.castOrNull(
-    stepType: T,
-    vararg stepTypes: T
-) = if (type == stepType || type in stepTypes) {
-    @Suppress("UNCHECKED_CAST")
-    this as Step<T, out Payload, out UserInput, out ValidationResult, *>
-} else {
-    null
-}
-
 private fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload, UserInput, ValidationResult> FlowState<*, *, *, *>.containsStepOfType(
     stepType: T,
     vararg stepTypes: T
