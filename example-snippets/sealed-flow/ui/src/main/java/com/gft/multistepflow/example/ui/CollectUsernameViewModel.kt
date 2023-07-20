@@ -10,7 +10,7 @@ import com.gft.multistepflow.example.domain.usecases.EndLoginFlowUseCase
 import com.gft.multistepflow.example.domain.usecases.PerformLoginActionUseCase
 import com.gft.multistepflow.example.domain.usecases.StreamLoginFlowStateUseCase
 import com.gft.multistepflow.example.domain.usecases.UpdateLoginFlowUserInputUseCase
-import com.gft.multistepflow.example.domain.utils.launchUndispatched
+import com.gft.multistepflow.example.domain.usecases.utils.launchUndispatched
 import com.gft.multistepflow.example.ui.ProvideUsernameNavigationEffect.NavigateToNextScreen
 import com.gft.multistepflow.utils.filterByStepType
 import com.gft.mvi.BaseMviViewModel

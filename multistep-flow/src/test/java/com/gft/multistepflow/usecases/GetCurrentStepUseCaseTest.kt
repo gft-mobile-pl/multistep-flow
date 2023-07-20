@@ -24,7 +24,7 @@ internal class GetCurrentStepUseCaseTest {
     private lateinit var testFlow: MultiStepFlow<TestStepType<*, *, *, *>>
     private lateinit var startMultiStepFlow: StartMultiStepFlowUseCase<TestStepType<*, *, *, *>>
     private lateinit var setStep: SetStepUseCase<TestStepType<*, *, *, *>>
-    private lateinit var getCurrentStep: GetCurrentStepUseCase
+    private lateinit var getCurrentStep: GetCurrentStepUseCase<TestStepType<*, *, *, *>>
 
     @Before
     fun setUp() {

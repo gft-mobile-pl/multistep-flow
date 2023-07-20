@@ -8,12 +8,12 @@ open class GoBackToStepUseCase<FlowStepType : StepType<*, *, *, *>>(private val 
     private val setStep = SetStepUseCase(flow)
     private val getStepFromHistory = GetStepFromHistoryUseCase(flow)
 
-    operator fun <T : StepType<Payload, UserInput, ValidationData, *>, Payload, UserInput, ValidationData> invoke(stepType: T) {
+    operator fun <StepType : FlowStepType> invoke(stepType: StepType) {
         @Suppress("UNCHECKED_CAST")
         this(getStepFromHistory(stepType) as Step<FlowStepType, *, *, *, *>)
     }
 
-    operator fun invoke(step: Step<FlowStepType, *, *, *, *>) {
+    operator fun <StepType : FlowStepType> invoke(step: Step<StepType, *, *, *, *>) {
         setStep(
             step = step,
             reuseUserInput = false,
