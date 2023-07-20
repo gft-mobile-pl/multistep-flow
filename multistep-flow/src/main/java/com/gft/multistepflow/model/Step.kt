@@ -34,7 +34,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         payload: Payload = this.payload,
         userInput: UserInput = this.userInput,
         validationResult: ValidationResult = this.validationResult,
-        error: Throwable? = null
+        error: Throwable? = this.error
     ): Step<Type, Payload, UserInput, ValidationResult, Validator> = Step(
         type = type,
         payload = payload,
@@ -45,7 +45,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     )
 
     override fun toString(): String {
-        return "Step(type=$type, payload=$payload, userInput=$userInput, validationResult=$validationResult, userInputValidator=$userInputValidator, actions=$actions)"
+        return "Step(type=$type, payload=$payload, userInput=$userInput, validationResult=$validationResult, userInputValidator=$userInputValidator, actions=$actions, error=$error)"
     }
 
     override fun equals(other: Any?): Boolean {
