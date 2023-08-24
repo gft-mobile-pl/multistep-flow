@@ -12,7 +12,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     val userInput: UserInput,
     val validationResult: ValidationResult,
     internal val userInputValidator: Validator? = null,
-    val error: Throwable? = null
+    val error: ActionError? = null
 ) {
     val actions: Actions<Type> = Actions()
 
@@ -34,7 +34,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         payload: Payload = this.payload,
         userInput: UserInput = this.userInput,
         validationResult: ValidationResult = this.validationResult,
-        error: Throwable? = this.error
+        error: ActionError? = this.error
     ): Step<Type, Payload, UserInput, ValidationResult, Validator> = Step(
         type = type,
         payload = payload,

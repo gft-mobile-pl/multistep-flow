@@ -1,6 +1,7 @@
 package com.gft.multistepflow.usecases
 
 import com.gft.multistepflow.model.Action
+import com.gft.multistepflow.model.ActionError
 import com.gft.multistepflow.model.MultiStepFlow
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.withLock
@@ -24,13 +25,17 @@ open class PerformActionUseCase(
                     flowState.copy(isAnyOperationInProgress = false)
                 }
             } catch (error: Throwable) {
-                flow.session.update { flowState ->
-                    flowState.copy(
-                        isAnyOperationInProgress = false,
-                        currentStep = flowState.currentStep.copy(
-                            error = error
+                if (error is ActionError) {
+                    flow.session.update { flowState ->
+                        flowState.copy(
+                            isAnyOperationInProgress = false,
+                            currentStep = flowState.currentStep.copy(
+                                error = error
+                            )
                         )
-                    )
+                    }
+                } else {
+                    throw error
                 }
             }
         }
