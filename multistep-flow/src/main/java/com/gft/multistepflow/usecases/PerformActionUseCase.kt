@@ -3,6 +3,7 @@ package com.gft.multistepflow.usecases
 import com.gft.multistepflow.model.Action
 import com.gft.multistepflow.model.ActionError
 import com.gft.multistepflow.model.MultiStepFlow
+import com.gft.multistepflow.model.NotActionErrorException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -35,7 +36,7 @@ open class PerformActionUseCase(
                         )
                     }
                 } else {
-                    throw error
+                    throw NotActionErrorException(error, action)
                 }
             }
         }

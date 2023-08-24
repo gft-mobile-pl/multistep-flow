@@ -3,6 +3,7 @@ package com.gft.multistepflow.usecases
 import com.gft.multistepflow.model.Action
 import com.gft.multistepflow.model.ActionError
 import com.gft.multistepflow.model.MultiStepFlow
+import com.gft.multistepflow.model.NotActionErrorException
 import com.gft.multistepflow.model.Step
 import com.gft.multistepflow.model.StepType
 import com.gft.multistepflow.validators.BaseUserInputValidator
@@ -34,7 +35,7 @@ class PerformActionUseCaseTest {
     fun `when action throws action error then it is not thrown`() {
         runTest {
             startMultiStepFlow(Step(TestStepType.TestFirstStepType))
-            val action = object : Action() {
+            class SafeFailingAction : Action() {
                 override suspend fun perform(transactionId: String) {
                     throw ActionError(
                         error = IllegalStateException(),
@@ -44,6 +45,8 @@ class PerformActionUseCaseTest {
                     )
                 }
             }
+
+            val action = SafeFailingAction()
 
             performAction(action)
 
@@ -55,15 +58,17 @@ class PerformActionUseCaseTest {
         }
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `when action throws error that is not action error then it is thrown`() {
+    @Test(expected = NotActionErrorException::class)
+    fun `when action throws error that is not action error then NotActionErrorException is thrown`() {
         runTest {
             startMultiStepFlow(Step(TestStepType.TestFirstStepType))
-            val action = object : Action() {
+            class UnsafeFailingAction : Action() {
                 override suspend fun perform(transactionId: String) {
                     throw IllegalStateException()
                 }
             }
+
+            val action = UnsafeFailingAction()
 
             performAction(action)
 
