@@ -7,3 +7,5 @@ abstract class Action {
 
     override fun toString(): String = this::class.simpleName ?: super.toString()
 }
+
+abstract class ParametrizedAction<T> : Action()
