@@ -4,12 +4,12 @@ import androidx.lifecycle.viewModelScope
 import com.gft.multistepflow.example.domain.actions.getAcceptUsernameAction
 import com.gft.multistepflow.example.domain.model.LoginStep.CollectUsername
 import com.gft.multistepflow.example.domain.model.Username
-import com.gft.multistepflow.example.domain.usecases.AwaitLoginStepUseCase
 import com.gft.multistepflow.example.domain.usecases.BeginLoginUseCase
 import com.gft.multistepflow.example.domain.usecases.EndLoginFlowUseCase
 import com.gft.multistepflow.example.domain.usecases.PerformLoginActionUseCase
 import com.gft.multistepflow.example.domain.usecases.StreamLoginFlowStateUseCase
 import com.gft.multistepflow.example.domain.usecases.UpdateLoginFlowUserInputUseCase
+import com.gft.multistepflow.example.domain.usecases.WhenLoginStepUseCase
 import com.gft.multistepflow.example.domain.usecases.utils.launchUndispatched
 import com.gft.multistepflow.example.ui.ProvideUsernameNavigationEffect.NavigateToNextScreen
 import com.gft.multistepflow.utils.filterByStepType
@@ -25,12 +25,13 @@ import kotlinx.coroutines.withContext
 
 class CollectUsernameViewModel(
     beginLogin: BeginLoginUseCase,
+    streamFlowState: StreamLoginFlowStateUseCase,
     private val endLoginFlow: EndLoginFlowUseCase,
     private val performAction: PerformLoginActionUseCase,
     private val updateUserInput: UpdateLoginFlowUserInputUseCase,
-    private val awaitStepUseCase: AwaitLoginStepUseCase,
-    private val streamFlowState: StreamLoginFlowStateUseCase
-) : BaseMviViewModel<ProvideUsernameViewState, ProvideUsernameViewEvent, ProvideUsernameNavigationEffect, ViewEffect>(
+    private val whenStep: WhenLoginStepUseCase,
+
+    ) : BaseMviViewModel<ProvideUsernameViewState, ProvideUsernameViewEvent, ProvideUsernameNavigationEffect, ViewEffect>(
     ProvideUsernameViewState(username = "", isLoadingIndicatorVisible = false)
 ) {
     init {
@@ -58,7 +59,7 @@ class CollectUsernameViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), ProvideUsernameViewState("", false))
 
-    override fun onEvent(event: ProvideUsernameViewEvent) {
+    override fun onEvent(event: ProvideUsernameViewEvent) = whenStep(CollectUsername) { step ->
         when (event) {
             ProvideUsernameViewEvent.OnBackClicked -> {
                 viewModelScope.launchUndispatched {
@@ -72,7 +73,6 @@ class CollectUsernameViewModel(
 
             ProvideUsernameViewEvent.OnNextClicked -> {
                 viewModelScope.launchUndispatched {
-                    val step = awaitStepUseCase(CollectUsername)
                     performAction(step.actions.getAcceptUsernameAction())
                 }
             }

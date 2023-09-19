@@ -14,6 +14,7 @@ import com.gft.multistepflow.usecases.SetStepUseCase
 import com.gft.multistepflow.usecases.StartMultiStepFlowUseCase
 import com.gft.multistepflow.usecases.StreamFlowStateUseCase
 import com.gft.multistepflow.usecases.UpdateUserInputUseCase
+import com.gft.multistepflow.usecases.WhenStepUseCase
 
 internal class StartLoginFlowUseCase(loginFlow: LoginFlow) : StartMultiStepFlowUseCase<LoginStep<*, *, *, *>>(loginFlow)
 class EndLoginFlowUseCase(loginFlow: LoginFlow) : EndMultiStepFlowUseCase(loginFlow)
@@ -27,3 +28,4 @@ class RequireLoginStepUseCase(loginFlow: LoginFlow) : RequireStepUseCase(loginFl
 class SetLoginStepUseCase(loginFlow: LoginFlow) : SetStepUseCase<LoginStep<*, *, *, *>>(loginFlow)
 class StreamLoginFlowStateUseCase(loginFlow: LoginFlow) : StreamFlowStateUseCase<LoginStep<*, *, *, *>>(loginFlow)
 class UpdateLoginFlowUserInputUseCase(loginFlow: LoginFlow) : UpdateUserInputUseCase(loginFlow)
+class WhenLoginStepUseCase(loginFlow: LoginFlow) : WhenStepUseCase(loginFlow)
