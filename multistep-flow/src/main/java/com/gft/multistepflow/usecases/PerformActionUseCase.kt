@@ -4,6 +4,7 @@ import com.gft.multistepflow.model.Action
 import com.gft.multistepflow.model.ActionError
 import com.gft.multistepflow.model.MultiStepFlow
 import com.gft.multistepflow.model.NotActionErrorException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -15,13 +16,31 @@ open class PerformActionUseCase(
     suspend operator fun invoke(
         action: Action,
         transactionId: String = UUID.randomUUID().toString(),
+    ): Unit = perform(action, null, transactionId)
+
+    suspend operator fun invoke(
+        action: Action,
+        dispatcher: CoroutineDispatcher,
+        transactionId: String = UUID.randomUUID().toString(),
+    ): Unit = perform(action, dispatcher, transactionId)
+
+    private suspend fun perform(
+        action: Action,
+        dispatcher: CoroutineDispatcher? = null,
+        transactionId: String = UUID.randomUUID().toString(),
     ): Unit = withContext(NonCancellable) {
         flow.mutex.withLock {
             flow.session.update { flowState ->
                 flowState.copy(isAnyOperationInProgress = true)
             }
             try {
-                action.internalPerform(transactionId)
+                if (dispatcher != null) {
+                    withContext(dispatcher) {
+                        action.internalPerform(transactionId)
+                    }
+                } else {
+                    action.internalPerform(transactionId)
+                }
                 flow.session.update { flowState ->
                     flowState.copy(isAnyOperationInProgress = false)
                 }
