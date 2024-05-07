@@ -17,7 +17,7 @@ open class StartMultiStepFlowUseCase<FlowStepType : StepType<*, *, *, *>>(
             FlowState(
                 currentStep = currentStep as Step<*, *, *, *, *>,
                 isAnyOperationInProgress = false,
-                previousSteps = if (flow.historyEnabled) listOf(currentStep) else emptyList()
+                stepsHistory = if (flow.historyEnabled) listOf(currentStep) else emptyList()
             )
         )
     }

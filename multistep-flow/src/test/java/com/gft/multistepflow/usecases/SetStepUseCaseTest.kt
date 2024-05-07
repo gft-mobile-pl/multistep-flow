@@ -37,7 +37,7 @@ internal class SetStepUseCaseTest {
 
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestSecondStepType))
-            assert(testFlow.session.requireData().previousSteps.isEmpty())
+            assert(testFlow.session.requireData().stepsHistory.isEmpty())
         }
     }
 
@@ -56,7 +56,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestSecondStepType))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType)
                 )
@@ -80,7 +80,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "test", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType),
                     Step(TestThirdStepType, "test", 5)
@@ -105,7 +105,7 @@ internal class SetStepUseCaseTest {
 
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 5))
-            assert(testFlow.session.requireData().previousSteps.isEmpty())
+            assert(testFlow.session.requireData().stepsHistory.isEmpty())
         }
     }
 
@@ -126,7 +126,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 10))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType),
                     Step(TestThirdStepType, "updated", 10)
@@ -152,7 +152,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType),
                     Step(TestThirdStepType, "updated", 5),
@@ -178,7 +178,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType),
                     Step(TestThirdStepType, "updated", 5),
@@ -228,7 +228,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "test", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestThirdStepType, "test", 5),
                 )
@@ -256,7 +256,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "test", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "test", 5),
                 )
             )
@@ -284,7 +284,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated", 5),
                 )
             )
@@ -311,7 +311,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 10))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated", 10),
                 )
             )
@@ -339,7 +339,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 10))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated", 10),
                 )
             )
@@ -368,7 +368,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated-2", 15))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated-2", 15),
                 )
             )
@@ -397,7 +397,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated-2", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated-2", 5),
                 )
             )
@@ -425,7 +425,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated-2", 5))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated-2", 5),
                 )
             )
@@ -453,7 +453,7 @@ internal class SetStepUseCaseTest {
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestThirdStepType, "updated", 10))
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestThirdStepType, "updated", 10),
                 )
             )

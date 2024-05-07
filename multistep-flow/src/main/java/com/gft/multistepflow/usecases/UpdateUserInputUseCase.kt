@@ -47,7 +47,7 @@ open class UpdateUserInputUseCase(
         }
         return sessionData.copy(
             currentStep = updatedStep,
-            previousSteps = if (flow.historyEnabled) sessionData.previousSteps.replaceLast(updatedStep) else sessionData.previousSteps
+            stepsHistory = if (flow.historyEnabled) sessionData.stepsHistory.replaceLast(updatedStep) else sessionData.stepsHistory
         )
     }
 }

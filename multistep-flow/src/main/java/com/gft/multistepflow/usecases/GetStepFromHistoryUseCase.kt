@@ -7,7 +7,7 @@ import com.gft.multistepflow.utils.castOrNull
 
 open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
 
-    operator fun invoke(step: Step<*, *, *, *, *>) = flow.session.requireData().previousSteps.lastOrNull { stepFromHistory ->
+    operator fun invoke(step: Step<*, *, *, *, *>) = flow.session.requireData().stepsHistory.lastOrNull { stepFromHistory ->
         step == stepFromHistory
     } ?: throw IllegalArgumentException("Provided step was not found in flow history")
 
@@ -15,7 +15,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, out Payload, out UserInput, out ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -25,7 +25,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, Payload, out UserInput, out ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -35,7 +35,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, Payload, UserInput, out ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -45,7 +45,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, Payload, out UserInput, ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -55,7 +55,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, Payload, UserInput, ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -65,7 +65,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, out Payload, UserInput, out ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -75,7 +75,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, out Payload, UserInput, ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }
@@ -85,7 +85,7 @@ open class GetStepFromHistoryUseCase(private val flow: MultiStepFlow<*>) {
         stepType: T,
         vararg stepTypes: T
     ): Step<T, out Payload, out UserInput, ValidationData, *> {
-        return flow.session.requireData().previousSteps.mapNotNull { stepFromHistory ->
+        return flow.session.requireData().stepsHistory.mapNotNull { stepFromHistory ->
             stepFromHistory.castOrNull(stepType, *stepTypes)
         }.lastOrNull() ?: throw IllegalArgumentException("Provided step type was not found in flow history")
     }

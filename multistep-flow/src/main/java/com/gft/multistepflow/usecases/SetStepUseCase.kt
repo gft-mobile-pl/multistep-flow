@@ -22,12 +22,12 @@ open class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
                 }
                 flowState.copy(
                     currentStep = stepToSet,
-                    previousSteps = if (flow.historyEnabled) flowState.previousSteps.replaceLast(stepToSet) else flowState.previousSteps
+                    stepsHistory = if (flow.historyEnabled) flowState.stepsHistory.replaceLast(stepToSet) else flowState.stepsHistory
                 )
             } else {
                 flowState.copy(
                     currentStep = step as Step<*, *, *, *, *>,
-                    previousSteps = if (flow.historyEnabled) flowState.previousSteps + step else flowState.previousSteps
+                    stepsHistory = if (flow.historyEnabled) flowState.stepsHistory + step else flowState.stepsHistory
                 )
             }
         }
@@ -43,7 +43,7 @@ open class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
             step = step,
             reuseUserInput = reuseUserInput,
             clearHistoryTo = flow.session.requireData()
-                .previousSteps
+                .stepsHistory
                 .lastOrNull { stepFromHistory -> stepFromHistory.type::class == clearHistoryTo::class }
                 ?: throw IllegalArgumentException("There is no step of type $clearHistoryTo in the history."),
             clearHistoryInclusive
@@ -58,9 +58,9 @@ open class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
         clearHistoryInclusive: Boolean
     ) {
         flow.session.update { flowState ->
-            if (!flowState.previousSteps.contains(clearHistoryTo)) throw IllegalArgumentException("Step $clearHistoryTo cannot be found in the history.")
+            if (!flowState.stepsHistory.contains(clearHistoryTo)) throw IllegalArgumentException("Step $clearHistoryTo cannot be found in the history.")
 
-            val newHistory = flowState.previousSteps.popTo(clearHistoryTo, clearHistoryInclusive)
+            val newHistory = flowState.stepsHistory.popTo(clearHistoryTo, clearHistoryInclusive)
             val currentStep = newHistory.lastOrNull()
             if (currentStep?.type == step.type) {
                 val stepToSet = if (reuseUserInput) {
@@ -70,12 +70,12 @@ open class SetStepUseCase<FlowStepType : StepType<*, *, *, *>>(
                 }
                 flowState.copy(
                     currentStep = stepToSet,
-                    previousSteps = if (flow.historyEnabled) newHistory.replaceLast(stepToSet) else flowState.previousSteps
+                    stepsHistory = if (flow.historyEnabled) newHistory.replaceLast(stepToSet) else flowState.stepsHistory
                 )
             } else {
                 flowState.copy(
                     currentStep = step as Step<*, *, *, *, *>,
-                    previousSteps = if (flow.historyEnabled) newHistory + step else flowState.previousSteps
+                    stepsHistory = if (flow.historyEnabled) newHistory + step else flowState.stepsHistory
                 )
             }
         }

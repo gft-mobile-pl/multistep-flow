@@ -10,27 +10,30 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
     internal val session: Session<FlowState<*, *, *, *>> = Session()
 
     override fun toString(): String {
-        return "MultiStepFlow(isAnyOperationInProgress=${session.data.value?.isAnyOperationInProgress ?: false}, currentStep=${session.data.value?.currentStep ?: "[none]"})"
+        return "${this::class.simpleName}(" +
+            "isAnyOperationInProgress=${session.data.value?.isAnyOperationInProgress ?: false}, " +
+            "currentStep=${session.data.value?.currentStep ?: "[none]"}, " +
+            "stepsHistory=${session.data.value?.stepsHistory?.map { step -> step.type::class.simpleName } ?: "[none]"})"
     }
 }
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
     val isAnyOperationInProgress: Boolean,
-    val previousSteps: List<Step<*, *, *, *, *>>
+    val stepsHistory: List<Step<*, *, *, *, *>>
 ) {
     internal fun copy(
         currentStep: Step<*, *, *, *, *> = this.currentStep,
         isAnyOperationInProgress: Boolean = this.isAnyOperationInProgress,
-        previousSteps: List<Step<*, *, *, *, *>> = this.previousSteps
+        stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory
     ) = FlowState(
         currentStep = currentStep,
         isAnyOperationInProgress = isAnyOperationInProgress,
-        previousSteps = previousSteps
+        stepsHistory = stepsHistory
     )
 
     override fun toString(): String {
-        return "FlowState(currentStep=$currentStep, isAnyOperationInProgress=$isAnyOperationInProgress, previousSteps=$previousSteps)"
+        return "FlowState(currentStep=$currentStep, isAnyOperationInProgress=$isAnyOperationInProgress, stepsHistory=$stepsHistory)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -41,7 +44,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
 
         if (currentStep != other.currentStep) return false
         if (isAnyOperationInProgress != other.isAnyOperationInProgress) return false
-        if (previousSteps != other.previousSteps) return false
+        if (stepsHistory != other.stepsHistory) return false
 
         return true
     }
@@ -49,7 +52,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
     override fun hashCode(): Int {
         var result = currentStep.hashCode()
         result = 31 * result + isAnyOperationInProgress.hashCode()
-        result = 31 * result + previousSteps.hashCode()
+        result = 31 * result + stepsHistory.hashCode()
         return result
     }
 }

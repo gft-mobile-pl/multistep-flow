@@ -32,7 +32,7 @@ class StartMultiStepFlowUseCaseTest {
 
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestStepType.TestFirstStepType))
-            assert(testFlow.session.requireData().previousSteps.isEmpty())
+            assert(testFlow.session.requireData().stepsHistory.isEmpty())
         }
     }
 
@@ -49,7 +49,7 @@ class StartMultiStepFlowUseCaseTest {
 
             //then
             assert(testFlow.session.requireData().currentStep == Step(TestStepType.TestFirstStepType))
-            assert(testFlow.session.requireData().previousSteps == listOf(Step(TestStepType.TestFirstStepType)))
+            assert(testFlow.session.requireData().stepsHistory == listOf(Step(TestStepType.TestFirstStepType)))
         }
     }
 }

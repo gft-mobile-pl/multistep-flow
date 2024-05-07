@@ -15,7 +15,7 @@ class RestartFlowUseCase<FlowStepType : StepType<*, *, *, *>>(
         flow.session.update { state ->
             state.copy(
                 currentStep = initialStep,
-                previousSteps = if (flow.historyEnabled) listOf(initialStep) else emptyList()
+                stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList()
             )
         }
     }

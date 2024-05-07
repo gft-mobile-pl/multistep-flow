@@ -272,7 +272,7 @@ internal class StepsFilteringTest {
                     FlowState(
                         currentStep = Step(TestThirdStepType, "payload", 5),
                         isAnyOperationInProgress = false,
-                        previousSteps = listOf(
+                        stepsHistory = listOf(
                             Step(TestFirstStepType),
                             Step(TestSecondStepType),
                             Step(TestThirdStepType, "payload", 5)

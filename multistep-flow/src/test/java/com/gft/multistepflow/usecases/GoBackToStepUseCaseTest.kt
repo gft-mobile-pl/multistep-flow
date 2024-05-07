@@ -76,7 +76,7 @@ internal class GoBackToStepUseCaseTest {
 
             //then
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestThirdStepType, "payload", 5),
                 )
@@ -98,7 +98,7 @@ internal class GoBackToStepUseCaseTest {
 
             //then
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType),
                     Step(TestThirdStepType, "payload", 5),
@@ -126,7 +126,7 @@ internal class GoBackToStepUseCaseTest {
 
             //then
             assert(
-                testFlow.session.requireData().previousSteps == listOf(
+                testFlow.session.requireData().stepsHistory == listOf(
                     Step(TestFirstStepType),
                     Step(TestSecondStepType),
                     Step(TestThirdStepType, "payload-1", 5),

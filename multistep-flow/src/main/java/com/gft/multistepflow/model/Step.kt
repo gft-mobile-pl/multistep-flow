@@ -45,7 +45,14 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     )
 
     override fun toString(): String {
-        return "Step(type=$type, payload=$payload, userInput=$userInput, validationResult=$validationResult, userInputValidator=$userInputValidator, actions=$actions, error=$error)"
+        return "Step(" +
+            "type=${type::class.simpleName}, " +
+            "payload=$payload, " +
+            "userInput=$userInput, " +
+            "validationResult=$validationResult, " +
+            "userInputValidator=${userInputValidator?.let { validator -> validator::class.simpleName }}, " +
+            "error=$error" +
+            ")"
     }
 
     override fun equals(other: Any?): Boolean {
