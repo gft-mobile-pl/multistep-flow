@@ -197,3 +197,18 @@ Note that all the use-cases provided by **Multistep Flow** library support manag
 ## Navigating to other steps
 
 ### Steps history
+
+# Testing
+
+The multistep flow library provides a test fixture that allows you to test your actions easily. By design, the action's `perform` method is protected and shouldn't be called directly - it is invoked only by `PerformActionUseCase`. This makes testing of an action a bit tricky since you need to make it accessible first using reflection.
+
+To circumvent that, you can write your actions as simple as possible - just to interoperate with the flow (getting data from payloads and user inputs, setting the steps) and move all your business logic into separate, testable use cases. However, if you want to test the more complex actions, you can use a provided test fixture.
+
+Test fixture contains a set of methods:
+
+| Method                                                                                                                                   | Purpose                                                                                                                                                                                                                                                    |
+|------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `TestMultistepFlow.restartFlow()`                                                                                                         | This method should be called in `@BeforeEach` method. Its purpose is to clear the flow of any remaining errors and make sure that it's in the clean state for each test. Note that test flow is started by default and there is no need to start it first. |
+| `TestMultistepFlow.performAction(action: Action, dispatcher: CoroutineDispatcher, transactionId: String = UUID.randomUUID().toString())` 
+ `TestMultistepFlow.performAction(action: Action, transactionId: String = UUID.randomUUID().toString())`                                  | these two methods are mimicking the `PerformActionUseCase` interface and should be used to call the action for testing.                                                                                                                                    |
+| `TestMultistepFlow.getFlowError()`                                                                                                                                         | This method is used to retrieve any error thrown by performing an action. As all errors thrown by Action should be wrapped in `ActionError`, we expect here to get either `ActionError` or `null` if no error was thrown.                                   |

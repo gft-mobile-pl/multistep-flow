@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
+    id 'java-test-fixtures'
 }
 
 java {
@@ -13,6 +14,7 @@ dependencies {
     implementation "io.insert-koin:koin-core:3.4.0"
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
+    testFixturesImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
 
     implementation project(':libraries:observable-session')
 }
