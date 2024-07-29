@@ -1,6 +1,9 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
+    id 'com.vanniktech.maven.publish'
 }
 
 dependencies {
@@ -9,6 +12,36 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+mavenPublishing {
+    coordinates(project.property("libraryGroupId") as String, "multistep-flow-koin", project.property("libraryVersion") as String)
+
+    pom {
+        name.set(project.property("libraryNamePrefix") as String + " Koin")
+        description.set(project.property("libraryDescription") as String)
+        inceptionYear.set(project.property("libraryInceptionYear") as String)
+        url.set("https://${project.property("libraryRepositoryUrl") as String}")
+        licenses {
+            license {
+                name.set(project.property("libraryLicenseName") as String)
+                url.set(project.property("libraryLicenseUrl") as String)
+                distribution.set(project.property("libraryLicenseDistribution") as String)
+            }
+        }
+        developers {
+            developer {
+                name.set(project.property("libraryDeveloperName") as String)
+            }
+        }
+        scm {
+            url.set("https://${project.property("libraryRepositoryUrl") as String}")
+            connection.set("scm:git:git://${project.property("libraryRepositoryUrl") as String}")
+            developerConnection.set("scm:git:ssh://git@${project.property("libraryRepositoryUrl") as String}.git")
+        }
+        publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+        signAllPublications()
+    }
 }

@@ -32,9 +32,9 @@ android {
 
 dependencies {
     implementation project(':multistep-flow')
-    implementation project(':libraries:mvi')
     implementation project(':example-snippets:open-flow:domain')
 
+    implementation 'com.gft.mobile:mvi-core:1.0.4'
     implementation "io.insert-koin:koin-android:3.4.0"
     implementation 'androidx.core:core-ktx:1.10.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'

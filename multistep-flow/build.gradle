@@ -1,12 +1,15 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
     id 'java-test-fixtures'
+    id 'com.vanniktech.maven.publish'
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
@@ -16,5 +19,35 @@ dependencies {
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
     testFixturesImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
 
-    implementation project(':libraries:observable-session')
+    implementation "com.gft.mobile:observable-session:1.0.0"
+}
+
+mavenPublishing {
+    coordinates(project.property("libraryGroupId") as String, "multistep-flow", project.property("libraryVersion") as String)
+
+    pom {
+        name.set(project.property("libraryNamePrefix") as String)
+        description.set(project.property("libraryDescription") as String)
+        inceptionYear.set(project.property("libraryInceptionYear") as String)
+        url.set("https://${project.property("libraryRepositoryUrl") as String}")
+        licenses {
+            license {
+                name.set(project.property("libraryLicenseName") as String)
+                url.set(project.property("libraryLicenseUrl") as String)
+                distribution.set(project.property("libraryLicenseDistribution") as String)
+            }
+        }
+        developers {
+            developer {
+                name.set(project.property("libraryDeveloperName") as String)
+            }
+        }
+        scm {
+            url.set("https://${project.property("libraryRepositoryUrl") as String}")
+            connection.set("scm:git:git://${project.property("libraryRepositoryUrl") as String}")
+            developerConnection.set("scm:git:ssh://git@${project.property("libraryRepositoryUrl") as String}.git")
+        }
+        publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+        signAllPublications()
+    }
 }
