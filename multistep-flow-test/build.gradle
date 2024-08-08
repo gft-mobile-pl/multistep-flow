@@ -3,7 +3,6 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
-    id 'java-test-fixtures'
     id 'com.vanniktech.maven.publish'
 }
 
@@ -13,19 +12,15 @@ java {
 }
 
 dependencies {
+    implementation project(':multistep-flow')
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
-    implementation "io.insert-koin:koin-core:3.4.0"
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
-
-    implementation "com.gft.mobile:observable-session:1.0.0"
 }
 
 mavenPublishing {
-    coordinates(project.property("libraryGroupId") as String, "multistep-flow", project.property("libraryVersion") as String)
+    coordinates(project.property("libraryGroupId") as String, "multistep-flow-test", project.property("libraryVersion") as String)
 
     pom {
-        name.set(project.property("libraryNamePrefix") as String)
+        name.set(project.property("libraryNamePrefix") as String + " Test")
         description.set(project.property("libraryDescription") as String)
         inceptionYear.set(project.property("libraryInceptionYear") as String)
         url.set("https://${project.property("libraryRepositoryUrl") as String}")
