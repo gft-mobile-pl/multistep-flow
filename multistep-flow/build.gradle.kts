@@ -1,24 +1,14 @@
 import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
-    id 'java-library'
-    id 'org.jetbrains.kotlin.jvm'
-    id 'java-test-fixtures'
-    id 'com.vanniktech.maven.publish'
+    id("java-library")
+    alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.maven.publish)
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-}
-
-dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
-    implementation "io.insert-koin:koin-core:3.4.0"
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
-
-    implementation "com.gft.mobile:observable-session:1.0.0"
 }
 
 mavenPublishing {

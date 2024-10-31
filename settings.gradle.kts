@@ -12,7 +12,8 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
 rootProject.name = "Multistep Flow"
-include ':example-app'
-include ':multistep-flow'
-include ':multistep-flow-koin'
+include(":example-app")
+include(":multistep-flow")
+include(":multistep-flow-koin")

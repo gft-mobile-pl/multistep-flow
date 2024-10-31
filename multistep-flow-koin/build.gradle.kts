@@ -1,14 +1,9 @@
 import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
-    id 'java-library'
-    id 'org.jetbrains.kotlin.jvm'
-    id 'com.vanniktech.maven.publish'
-}
-
-dependencies {
-    implementation project(':multistep-flow')
-    implementation "io.insert-koin:koin-core:3.4.0"
+    id("java-library")
+    alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.maven.publish)
 }
 
 java {
