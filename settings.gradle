@@ -15,9 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "Multistep Flow"
 include ':example-app'
 include ':multistep-flow'
-include ':example-snippets:open-flow:domain'
-include ':example-snippets:open-flow:ui'
-include ':example-snippets:sealed-flow:domain'
-include ':example-snippets:sealed-flow:ui'
 include ':multistep-flow-koin'
-include ':multistep-flow-test'
