@@ -11,6 +11,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+dependencies {
+    implementation(libs.coroutines.core)
+    implementation(libs.gft.observablesession)
+}
+
 mavenPublishing {
     coordinates(project.property("libraryGroupId") as String, "multistep-flow", project.property("libraryVersion") as String)
 
