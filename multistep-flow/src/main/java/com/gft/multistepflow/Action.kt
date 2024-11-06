@@ -1,9 +1,11 @@
 package com.gft.multistepflow
 
-abstract class Action {
+abstract class Action<SupportedStep> {
+
     protected abstract suspend fun ActionScope.perform(transactionId: String)
 
-    internal suspend fun internalPerform(transactionId: String) = ActionScopeImplementation().perform(transactionId)
+    internal suspend fun internalPerform(transactionId: String) =
+        ActionScopeImplementation().perform(transactionId = transactionId)
 
     override fun toString(): String = this::class.simpleName ?: super.toString()
 
@@ -11,5 +13,3 @@ abstract class Action {
 
     private class ActionScopeImplementation : ActionScope
 }
-
-abstract class ParametrizedAction<T> : Action()

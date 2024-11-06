@@ -1,5 +1,9 @@
 package com.gft.multistepflow
 
+import com.gft.multistepflow.operations.PerformAction
+import kotlinx.coroutines.CoroutineDispatcher
+import java.util.UUID
+
 interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>>
 
 class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> private constructor(
@@ -10,7 +14,24 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     internal val userInputValidator: Validator? = null,
     val error: ActionError? = null,
 ) {
-    val actions: Actions<Type> = Actions()
+    internal lateinit var flow: MultiStepFlow<*>
+
+    suspend fun performAction(
+        action: Action<in Type>,
+        transactionId: String = UUID.randomUUID().toString(),
+    ) = performActionImplementation(action = action, null, transactionId = transactionId)
+
+    suspend fun performAction(
+        action: Action<in Type>,
+        dispatcher: CoroutineDispatcher,
+        transactionId: String = UUID.randomUUID().toString(),
+    ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
+
+    private suspend fun performActionImplementation(
+        action: Action<in Type>,
+        dispatcher: CoroutineDispatcher?,
+        transactionId: String,
+    ) = PerformAction<Type>(flow).performAction(action, dispatcher, transactionId)
 
     // Suppressing warning for unused generic type - it's not used here inside of the class, but it's used to ensure type safety when getting actions from steps
     @Suppress("unused")
@@ -63,7 +84,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         if (validationResult != other.validationResult) return false
         if (userInputValidator != other.userInputValidator) return false
         if (error != other.error) return false
-        if (actions != other.actions) return false
 
         return true
     }
@@ -75,7 +95,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         result = 31 * result + (validationResult?.hashCode() ?: 0)
         result = 31 * result + (userInputValidator?.hashCode() ?: 0)
         result = 31 * result + (error?.hashCode() ?: 0)
-        result = 31 * result + actions.hashCode()
         return result
     }
 

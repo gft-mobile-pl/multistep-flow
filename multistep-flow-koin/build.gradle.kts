@@ -11,6 +11,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+dependencies {
+    implementation(project(":multistep-flow"))
+    implementation(libs.koin.core)
+}
+
 mavenPublishing {
     coordinates(project.property("libraryGroupId") as String, "multistep-flow-koin", project.property("libraryVersion") as String)
 
