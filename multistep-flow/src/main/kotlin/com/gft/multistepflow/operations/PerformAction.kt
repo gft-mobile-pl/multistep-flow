@@ -12,20 +12,20 @@ import java.util.UUID
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
-class PerformActionContext : AbstractCoroutineContextElement(PerformActionContext) {
+private class PerformActionContext : AbstractCoroutineContextElement(PerformActionContext) {
     companion object Key : CoroutineContext.Key<PerformActionContext>
 }
 
 internal val CoroutineContext.isPerformActionContext: Boolean
     get() = this[PerformActionContext] != null
 
-internal class PerformAction<T>(
+internal class PerformAction(
     private val flow: MultiStepFlow<*>,
 ) {
     suspend fun performAction(
-        action: Action<in T>,
-        dispatcher: CoroutineDispatcher? = null,
-        transactionId: String = UUID.randomUUID().toString(),
+        action: Action<*, *>,
+        dispatcher: CoroutineDispatcher?,
+        transactionId: String,
     ): Unit = withContext(NonCancellable) {
         if (coroutineContext.isPerformActionContext) {
             if (dispatcher != null) {

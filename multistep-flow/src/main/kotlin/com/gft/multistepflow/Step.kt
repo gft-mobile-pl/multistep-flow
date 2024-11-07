@@ -17,21 +17,26 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     internal lateinit var flow: MultiStepFlow<*>
 
     suspend fun performAction(
-        action: Action<in Type>,
+        action: Action<in Type, *>,
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, null, transactionId = transactionId)
 
     suspend fun performAction(
-        action: Action<in Type>,
+        action: Action<in Type, *>,
         dispatcher: CoroutineDispatcher,
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
 
     private suspend fun performActionImplementation(
-        action: Action<in Type>,
+        action: Action<*, *>,
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
-    ) = PerformAction<Type>(flow).performAction(action, dispatcher, transactionId)
+    ) {
+        if (!::flow.isInitialized) {
+            throw IllegalStateException("You must add the step to the flow before performing any action.")
+        }
+        PerformAction(flow).performAction(action, dispatcher, transactionId)
+    }
 
     // Suppressing warning for unused generic type - it's not used here inside of the class, but it's used to ensure type safety when getting actions from steps
     @Suppress("unused")

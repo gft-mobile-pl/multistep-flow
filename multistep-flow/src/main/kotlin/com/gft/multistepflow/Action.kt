@@ -1,6 +1,6 @@
 package com.gft.multistepflow
 
-abstract class Action<SupportedStep> {
+abstract class Action<SupportedStep, FlowStepType : StepType<*, *, *, *>> {
 
     protected abstract suspend fun ActionScope.perform(transactionId: String)
 
