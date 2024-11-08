@@ -10,6 +10,13 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
 ) {
     internal val session: Session<FlowState<*, *, *, *>> = Session()
 
+    fun <StepType : FlowStepType> setStep(
+        step: Step<StepType, *, *, *, *>,
+        reuseUserInput: Boolean = true,
+    ) {
+
+    }
+
     suspend fun start(
         initialStep: Step<out FlowStepType, *, *, *, *>,
         assertFlowIsNotStarted: Boolean = false,

@@ -16,26 +16,42 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
 ) {
     internal lateinit var flow: MultiStepFlow<in Type>
 
+    suspend fun <FlowType : MultiStepFlow<in Type>> performAction(
+        action: Action<in Type, FlowType>,
+        transactionId: String = UUID.randomUUID().toString(),
+    ) = performActionImplementation(action = action, null, transactionId = transactionId)
+
+    suspend fun <FlowType : MultiStepFlow<in Type>> performAction(
+        action: Action<in Type, FlowType>,
+        dispatcher: CoroutineDispatcher,
+        transactionId: String = UUID.randomUUID().toString(),
+    ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
+
     suspend fun performAction(
-        action: Action<in Type, *>,
+        action: MultiFlowAction<in Type, in Type>,
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, null, transactionId = transactionId)
 
     suspend fun performAction(
-        action: Action<in Type, *>,
+        action: MultiFlowAction<in Type, in Type>,
         dispatcher: CoroutineDispatcher,
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
 
     private suspend fun performActionImplementation(
         action: Action<*, *>,
-        dispatcher: CoroutineDispatcher?,
-        transactionId: String,
+        dispatcher: CoroutineDispatcher? = null,
+        transactionId: String = UUID.randomUUID().toString(),
     ) {
         if (!::flow.isInitialized) {
             throw IllegalStateException("You must add the step to the flow before performing any action.")
         }
-        PerformAction(flow).performAction(action, dispatcher, transactionId)
+        PerformAction.performAction(
+            action = action,
+            flow = flow,
+            dispatcher = dispatcher,
+            transactionId = transactionId
+        )
     }
 
     // Suppressing warning for unused generic type - it's not used here inside of the class, but it's used to ensure type safety when getting actions from steps
