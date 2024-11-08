@@ -14,6 +14,8 @@ java {
 dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.gft.observablesession)
+
+    testImplementation(libs.junit)
 }
 
 mavenPublishing {
