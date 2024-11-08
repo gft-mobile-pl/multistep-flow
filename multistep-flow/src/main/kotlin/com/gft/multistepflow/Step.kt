@@ -14,7 +14,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     internal val userInputValidator: Validator? = null,
     val error: ActionError? = null,
 ) {
-    internal lateinit var flow: MultiStepFlow<*>
+    internal lateinit var flow: MultiStepFlow<in Type>
 
     suspend fun performAction(
         action: Action<in Type, *>,
