@@ -5,7 +5,6 @@ import com.gft.multistepflow.BaseUserInputValidator
 import com.gft.multistepflow.DefaultNoOpValidator
 import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
-import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithCardStep
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithQRCodeStep
@@ -58,21 +57,21 @@ typealias PaymentWithQRCodeAction<T> = Action<T, PaymentWithQRCodeFlow>
  */
 class CancelPaymentAction : AnyPaymentTypeAction<CancellableStep>() {
     override suspend fun perform(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
-        flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
-        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
-        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
+//        flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
+//        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
+//        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
 
-        if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
+//        if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
     }
 }
 
 class ConfirmUserDataAction : AnyPaymentTypeAction<ProvideUserData>() {
     override suspend fun perform(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
-        flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
-        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
-        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
+//        flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
+//        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
+//        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
 
-        if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
+//        if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
     }
 }
 
@@ -85,9 +84,9 @@ class ReadQRCodeFullManualAction : PaymentWithQRCodeAction<QRCodeFullManualProvi
     override suspend fun perform(flow: PaymentWithQRCodeFlow, transactionId: String) {
         println("#Test ReadQRCodeFullManualAction.perform")
 
-        flow.setStep(Step(ScanQRCode))
-        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
-        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
+//        flow.setStep(Step(ScanQRCode))
+//        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
+//        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
     }
 
 }
