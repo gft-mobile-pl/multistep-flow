@@ -11,12 +11,13 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
-private class PerformActionContext : AbstractCoroutineContextElement(PerformActionContext) {
+private class PerformActionContext(
+    val flow: MultiStepFlow<*>,
+) : AbstractCoroutineContextElement(PerformActionContext) {
     companion object Key : CoroutineContext.Key<PerformActionContext>
 }
 
-internal val CoroutineContext.isPerformActionContext: Boolean
-    get() = this[PerformActionContext] != null
+internal fun CoroutineContext.isPerformActionContext(flow: MultiStepFlow<*>): Boolean = this[PerformActionContext]?.flow == flow
 
 internal object PerformAction {
     suspend fun performAction(
@@ -25,7 +26,7 @@ internal object PerformAction {
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
     ): Unit = withContext(NonCancellable) {
-        if (coroutineContext.isPerformActionContext) {
+        if (coroutineContext.isPerformActionContext(flow)) {
             if (dispatcher != null) {
                 withContext(dispatcher) {
                     action.internalPerform(flow, transactionId)
@@ -33,7 +34,7 @@ internal object PerformAction {
             } else {
                 action.internalPerform(flow, transactionId)
             }
-        } else withContext(PerformActionContext()) {
+        } else withContext(PerformActionContext(flow)) {
             flow.mutex.withLock {
                 flow.session.update { flowState ->
                     flowState.copy(isAnyOperationInProgress = true)
