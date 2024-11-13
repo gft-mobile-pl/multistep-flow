@@ -10,11 +10,6 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
 ) {
     internal val session: Session<FlowState<*, *, *, *>> = Session()
 
-    suspend fun start(
-        initialStep: Step<out FlowStepType, *, *, *, *>,
-        assertFlowIsNotStarted: Boolean = false,
-    ) = StartFlow(this)(initialStep, assertFlowIsNotStarted)
-
     override fun toString(): String {
         return "${this::class.simpleName}(" +
                 "isAnyOperationInProgress=${session.data.value?.isAnyOperationInProgress ?: false}, " +
@@ -22,6 +17,9 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
                 "stepsHistory=${session.data.value?.stepsHistory?.map { step -> step.type::class.simpleName } ?: "[none]"})"
     }
 }
+
+val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
+    get() = StartFlow(this)
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,

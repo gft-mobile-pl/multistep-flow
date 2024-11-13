@@ -83,7 +83,6 @@ class ConfirmCardDataAction : PaymentWithCardAction<ProvideCardData>() {
 class ReadQRCodeFullManualAction : PaymentWithQRCodeAction<QRCodeFullManualProvider>() {
     override suspend fun perform(flow: PaymentWithQRCodeFlow, transactionId: String) {
         println("#Test ReadQRCodeFullManualAction.perform")
-
 //        flow.setStep(Step(ScanQRCode))
 //        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
 //        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED

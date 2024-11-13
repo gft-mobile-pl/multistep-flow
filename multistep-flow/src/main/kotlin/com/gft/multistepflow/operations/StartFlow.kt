@@ -6,12 +6,12 @@ import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import kotlinx.coroutines.sync.withLock
 
-internal class StartFlow<FlowStepType : StepType<*, *, *, *>>(
+class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
     private val flow: MultiStepFlow<FlowStepType>,
 ) {
     suspend operator fun invoke(
         initialStep: Step<out FlowStepType, *, *, *, *>,
-        assertFlowIsNotStarted: Boolean,
+        assertFlowIsNotStarted: Boolean = false,
     ) = flow.mutex.withLock {
         if (flow.session.isStarted) {
             if (assertFlowIsNotStarted) throw IllegalStateException("Flow $this is already started!")

@@ -1,5 +1,8 @@
 package com.gft.multistepflow
 
+import com.gft.multistepflow.annotations.FlowStartInActionScope
+import com.gft.multistepflow.operations.StartFlow
+
 abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
 
     protected abstract suspend fun perform(
@@ -20,6 +23,10 @@ abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
     }
 
     override fun toString(): String = this::class.simpleName ?: super.toString()
+
+    @FlowStartInActionScope
+    val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
+        get() = StartFlow(this)
 }
 
 abstract class MultiFlowAction<SupportedStep, FlowStepType : StepType<*, *, *, *>> :

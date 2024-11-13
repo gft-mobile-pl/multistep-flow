@@ -4,6 +4,7 @@ import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithCardStep
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithQRCodeStep
+import com.gft.multistepflow.start
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
