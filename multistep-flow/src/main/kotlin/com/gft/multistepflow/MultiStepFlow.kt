@@ -1,5 +1,7 @@
 package com.gft.multistepflow
 
+import com.gft.multistepflow.operations.AwaitAllActionsAndEndFlow
+import com.gft.multistepflow.operations.EndFlow
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.observablesession.Session
 import kotlinx.coroutines.sync.Mutex
@@ -20,6 +22,9 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
     get() = StartFlow(this)
+
+val MultiStepFlow<*>.end: EndFlow
+    get() = AwaitAllActionsAndEndFlow(this)
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,

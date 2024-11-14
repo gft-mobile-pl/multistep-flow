@@ -1,6 +1,10 @@
 package com.gft.multistepflow
 
+import com.gft.multistepflow.annotations.FlowEndInActionScope
 import com.gft.multistepflow.annotations.FlowStartInActionScope
+import com.gft.multistepflow.operations.AwaitAllActionsAndEndFlow
+import com.gft.multistepflow.operations.EndFlow
+import com.gft.multistepflow.operations.EndFlowImmediately
 import com.gft.multistepflow.operations.StartFlow
 
 abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
@@ -27,6 +31,13 @@ abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
     @FlowStartInActionScope
     val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
         get() = StartFlow(this)
+
+    @FlowEndInActionScope
+    val MultiStepFlow<*>.end: EndFlow
+        get() = AwaitAllActionsAndEndFlow(this)
+
+    val MultiStepFlow<*>.endImmediately: EndFlow
+        get() = EndFlowImmediately(this)
 }
 
 abstract class MultiFlowAction<SupportedStep, FlowStepType : StepType<*, *, *, *>> :

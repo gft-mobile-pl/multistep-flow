@@ -26,6 +26,8 @@ internal object PerformAction {
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
     ): Unit = withContext(NonCancellable) {
+        if (!flow.session.isStarted) throw IllegalStateException("Action $action cannot be performed - flow is not started.")
+
         if (coroutineContext.isPerformActionContext(flow)) {
             if (dispatcher != null) {
                 withContext(dispatcher) {
@@ -36,6 +38,9 @@ internal object PerformAction {
             }
         } else withContext(PerformActionContext(flow)) {
             flow.mutex.withLock {
+                // if a flow was terminated with MultiStepFlow.endImmediately() all pending actions should be cancelled
+                if (!flow.session.isStarted) return@withLock
+
                 flow.session.update { flowState ->
                     flowState.copy(isAnyOperationInProgress = true)
                 }
@@ -47,6 +52,8 @@ internal object PerformAction {
                     } else {
                         action.internalPerform(flow, transactionId)
                     }
+
+                    if (!flow.session.isStarted) return@withLock
                     flow.session.update { flowState ->
                         flowState.copy(isAnyOperationInProgress = false)
                     }
