@@ -16,7 +16,7 @@ internal class EndFlowImmediately(val flow: MultiStepFlow<*>) : EndFlow {
     override suspend operator fun invoke() {
         if (!coroutineContext.isPerformActionContext(flow)) {
             throw InvalidFlowException(
-                "MultiStepFlow<*>.endImmediately() cannot be called within an Action that is not performed in the context of this Flow. " +
+                "MultiStepFlow<*>.endImmediately() can only be called within an Action that was started in the context of that Flow. " +
                         "If you intend to end a different flow, opt in to MultiStepFlow<*>.end()."
             )
         }

@@ -91,10 +91,10 @@ class EndFlowTest {
         try {
             testStep.performAction(EndNotRelatedTestFlowAction(notRelatedTestFlow))
         } catch (error: Exception) {
-            throw error.getRootCause()
+            throw error.unwrapNotActionErrorException()
         }
 
     }
 }
 
-private fun Exception.getRootCause() = if (this is NotActionErrorException) this.error else this
+private fun Exception.unwrapNotActionErrorException() = if (this is NotActionErrorException) this.error else this
