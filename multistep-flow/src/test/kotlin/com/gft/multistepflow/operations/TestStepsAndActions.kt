@@ -5,6 +5,7 @@ import com.gft.multistepflow.BaseUserInputValidator
 import com.gft.multistepflow.DefaultNoOpValidator
 import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
+import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithCardStep
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithQRCodeStep
@@ -49,53 +50,45 @@ class PaymentWithQRCodeFlow : MultiStepFlow<PaymentWithQRCodeStep<*, *, *, *>>(h
  * The type aliases and base classes below are optional -> one can use them to shorten Action definition
  */
 abstract class AnyPaymentTypeAction<T> : MultiFlowAction<T, PaymentStep<*, *, *, *>>()
-typealias PaymentWithCardAction<T> = Action<T, PaymentWithCardFlow>
-typealias PaymentWithQRCodeAction<T> = Action<T, PaymentWithQRCodeFlow>
+typealias PaymentWithCardAction<T> = Action<T, PaymentWithCardStep<*, *, *, *>>
+typealias PaymentWithQRCodeAction<T> = Action<T, PaymentWithQRCodeStep<*, *, *, *>>
 
 /**
  * Actions
  */
 class CancelPaymentAction : AnyPaymentTypeAction<CancellableStep>() {
-    override suspend fun perform(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
-//        flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
-//        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
-//        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
-
-//        if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
+    override suspend fun performAction(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
+        println("#Test CancelPaymentAction.perform")
     }
 }
 
 class ConfirmUserDataAction : AnyPaymentTypeAction<ProvideUserData>() {
-    override suspend fun perform(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
-//        flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
-//        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
-//        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
-
-//        if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
+    override suspend fun performAction(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
+        println("#Test ConfirmUserDataAction.perform")
     }
 }
 
 class ConfirmCardDataAction : PaymentWithCardAction<ProvideCardData>() {
-    override suspend fun perform(flow: PaymentWithCardFlow, transactionId: String) =
+    override suspend fun perform(flow: MultiStepFlow<PaymentWithCardStep<*, *, *, *>>, transactionId: String) {
         println("#Test ConfirmCardDataAction.perform")
+    }
 }
 
 class ReadQRCodeFullManualAction : PaymentWithQRCodeAction<QRCodeFullManualProvider>() {
-    override suspend fun perform(flow: PaymentWithQRCodeFlow, transactionId: String) {
+    override suspend fun perform(flow: MultiStepFlow<PaymentWithQRCodeStep<*, *, *, *>>, transactionId: String) {
         println("#Test ReadQRCodeFullManualAction.perform")
-//        flow.setStep(Step(ScanQRCode))
-//        flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
-//        flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
     }
 
 }
 
 class ConfirmQRCodeIntroductionAction : PaymentWithQRCodeAction<IntroductionToQRCode>() {
-    override suspend fun perform(flow: PaymentWithQRCodeFlow, transactionId: String) =
+    override suspend fun perform(flow: MultiStepFlow<PaymentWithQRCodeStep<*, *, *, *>>, transactionId: String) {
         println("#Test ConfirmQRCodeIntroductionAction.perform")
+    }
 }
 
 class ScanQRCodeAction : PaymentWithQRCodeAction<ScanQRCode>() {
-    override suspend fun perform(flow: PaymentWithQRCodeFlow, transactionId: String) =
+    override suspend fun perform(flow: MultiStepFlow<PaymentWithQRCodeStep<*, *, *, *>>, transactionId: String) {
         println("#Test ScanQRCodeAction.perform")
+    }
 }

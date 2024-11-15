@@ -36,40 +36,47 @@ internal object PerformAction {
             } else {
                 action.internalPerform(flow, transactionId)
             }
-        } else withContext(PerformActionContext(flow)) {
-            flow.mutex.withLock {
-                // if a flow was terminated with MultiStepFlow.endImmediately() all pending actions should be cancelled
-                if (!flow.session.isStarted) return@withLock
+        } else withContext(PerformActionContext(flow)) actionContent@ {
+            flow.mutex.lock()
 
-                flow.session.update { flowState ->
-                    flowState.copy(isAnyOperationInProgress = true)
-                }
-                try {
-                    if (dispatcher != null) {
-                        withContext(dispatcher) {
-                            action.internalPerform(flow, transactionId)
-                        }
-                    } else {
+            flow.session.update { flowState ->
+                flowState.copy(isAnyOperationInProgress = true)
+            }
+            try {
+                if (dispatcher != null) {
+                    withContext(dispatcher) {
                         action.internalPerform(flow, transactionId)
                     }
+                } else {
+                    action.internalPerform(flow, transactionId)
+                }
 
-                    if (!flow.session.isStarted) return@withLock
+                if (!flow.session.isStarted) return@actionContent
+                flow.session.update { flowState ->
+                    flowState.copy(isAnyOperationInProgress = false)
+                }
+            } catch (error: Throwable) {
+                if (!flow.session.isStarted) {
+                    throw IllegalStateException("Cannot handle action error, as flow has already ended.", error)
+                }
+
+                if (error is ActionError) {
                     flow.session.update { flowState ->
-                        flowState.copy(isAnyOperationInProgress = false)
-                    }
-                } catch (error: Throwable) {
-                    if (error is ActionError) {
-                        flow.session.update { flowState ->
-                            flowState.copy(
-                                isAnyOperationInProgress = false,
-                                currentStep = flowState.currentStep.copy(
-                                    error = error
-                                )
+                        flowState.copy(
+                            isAnyOperationInProgress = false,
+                            currentStep = flowState.currentStep.copy(
+                                error = error
                             )
-                        }
-                    } else {
-                        throw NotActionErrorException(error, action)
+                        )
                     }
+                } else {
+                    throw NotActionErrorException(error, action)
+                }
+            } finally {
+                try {
+                    flow.mutex.unlock()
+                } catch (error: Throwable) {
+                    // nothing - mutex was unlocked by some other action internally
                 }
             }
         }

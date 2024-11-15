@@ -14,6 +14,7 @@ java {
 dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.gft.observablesession)
+    implementation(libs.gft.coroutines)
 
     testImplementation(libs.junit)
 }

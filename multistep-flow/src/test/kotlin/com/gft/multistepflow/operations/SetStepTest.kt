@@ -3,6 +3,7 @@ package com.gft.multistepflow.operations
 import com.gft.multistepflow.Action
 import com.gft.multistepflow.BaseUserInputValidator
 import com.gft.multistepflow.DefaultNoOpValidator
+import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.Step
@@ -11,6 +12,7 @@ import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestFirstStepTy
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestFourthStepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestSecondStepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestThirdStepType
+import com.gft.multistepflow.operations.SetStepTest.UnrelatedTestStepType.SomeUnrelatedStepType
 import com.gft.multistepflow.start
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -25,23 +27,53 @@ internal class SetStepTest {
         data object TestFourthStepType : TestStepType<Unit, Unit, Unit, DefaultNoOpValidator>
     }
 
-    private class TestFlowAction(val block: Action<Any, TestFlow>) : Action<Any, TestFlow>(){
-        override suspend fun perform(flow: TestFlow, transactionId: String) {
-            val step = Step(TestFirstStepType)
-            flow.setStep(step)
-        }
-
-    }
-
     private class TestFlow(historyEnabled: Boolean) : MultiStepFlow<TestStepType<*, *, *, *>>(historyEnabled) {
-        suspend fun performInActionScope(block: suspend Action<Any, TestFlow>.() -> Unit) {
+        suspend fun performInActionScope(block: suspend Action<Any, TestStepType<*, *, *, *>>.() -> Unit) {
             @Suppress("UNCHECKED_CAST")
-            (session.data.value?.currentStep as? Step<TestStepType<*, *, *, *>, *, *, *, *>)?.performAction(GenericAction(block))
+            (session.data.value?.currentStep as? Step<TestStepType<*, *, *, *>, *, *, *, *>)
+                ?.performAction(object : Action<Any, TestStepType<*, *, *, *>>() {
+                    override suspend fun perform(flow: MultiStepFlow<TestStepType<*, *, *, *>>, transactionId: String) {
+                        block()
+                    }
+                })
         }
     }
 
-    private class GenericAction(val block: suspend Action<Any, TestFlow>.() -> Unit) : Action<Any, TestFlow>() {
-        override suspend fun perform(flow: TestFlow, transactionId: String) = block()
+    private sealed interface UnrelatedTestStepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+        StepType<Payload, UserInput, ValidationResult, Validator> {
+        data object SomeUnrelatedStepType : UnrelatedTestStepType<Unit, Unit, Unit, DefaultNoOpValidator>
+    }
+
+    private class UnrelatedTestFlow : MultiStepFlow<UnrelatedTestStepType<*, *, *, *>>(historyEnabled = false)
+
+    @Test
+    fun genericsTest() {
+        @Suppress("UNUSED_VARIABLE")
+        val action1 = object : Action<Any, TestStepType<*, *, *, *>>() {
+            override suspend fun perform(flow: MultiStepFlow<TestStepType<*, *, *, *>>, transactionId: String) {
+                val step = Step(TestFirstStepType)
+                flow.setStep(step)
+
+                val unrelatedStep = Step(SomeUnrelatedStepType)
+                val unrelatedFlow = UnrelatedTestFlow()
+//                unrelatedFlow.setStep(unrelatedStep) // compilation error: PASSED
+
+//                flow.setStep(unrelatedStep) // compilation error: PASSED
+            }
+        }
+
+        @Suppress("UNUSED_VARIABLE")
+        val action2 = object : MultiFlowAction<CancellableStep, PaymentStep<*, *, *, *>>() {
+            override suspend fun performAction(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
+//                flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
+//                flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
+//                flow.setStep(Step(NotRelatedCancellableStepType)) // compilation error: PASSED
+
+                if (flow is PaymentWithCardFlow) flow.setStep(Step(ProvideCardData, 5, Unit))
+                if (flow is PaymentWithQRCodeFlow) flow.setStep(Step(ScanQRCode))
+            }
+        }
+
     }
 
     private lateinit var testFlow: TestFlow

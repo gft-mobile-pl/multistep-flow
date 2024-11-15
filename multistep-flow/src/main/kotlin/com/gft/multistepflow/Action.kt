@@ -1,17 +1,14 @@
 package com.gft.multistepflow
 
-import com.gft.multistepflow.annotations.FlowEndInActionScope
 import com.gft.multistepflow.annotations.FlowStartInActionScope
-import com.gft.multistepflow.operations.AwaitAllActionsAndEndFlow
 import com.gft.multistepflow.operations.EndFlow
-import com.gft.multistepflow.operations.EndFlowImmediately
 import com.gft.multistepflow.operations.SetStep
 import com.gft.multistepflow.operations.StartFlow
 
-abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
+abstract class Action<SupportedStep, FlowStepType : StepType<*, *, *, *>> {
 
     protected abstract suspend fun perform(
-        flow: FlowType,
+        flow: MultiStepFlow<FlowStepType>,
         transactionId: String,
     )
 
@@ -22,7 +19,7 @@ abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
         // We rely on Step.performAction API to do the type check
         @Suppress("UNCHECKED_CAST")
         perform(
-            flow = flow as FlowType,
+            flow = flow as MultiStepFlow<FlowStepType>,
             transactionId = transactionId
         )
     }
@@ -30,19 +27,20 @@ abstract class Action<SupportedStep, FlowType : MultiStepFlow<*>> {
     override fun toString(): String = this::class.simpleName ?: super.toString()
 
     @FlowStartInActionScope
-    val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
+    val MultiStepFlow<FlowStepType>.start
         get() = StartFlow(this)
 
-    @FlowEndInActionScope
-    val MultiStepFlow<*>.end: EndFlow
-        get() = AwaitAllActionsAndEndFlow(this)
+    val MultiStepFlow<*>.end
+        get() = EndFlow(this)
 
-    val MultiStepFlow<*>.endImmediately: EndFlow
-        get() = EndFlowImmediately(this)
-
-    val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.setStep
+    val <T : FlowStepType> MultiStepFlow<T>.setStep
         get() = SetStep(this)
 }
 
-abstract class MultiFlowAction<SupportedStep, FlowStepType : StepType<*, *, *, *>> :
-    Action<SupportedStep, MultiStepFlow<out FlowStepType>>()
+abstract class MultiFlowAction<SupportedStep, FlowStepType : StepType<*, *, *, *>> : Action<SupportedStep, FlowStepType>() {
+    override suspend fun perform(flow: MultiStepFlow<FlowStepType>, transactionId: String) {
+        perform(flow, transactionId)
+    }
+
+    protected abstract suspend fun performAction(flow: MultiStepFlow<out FlowStepType>, transactionId: String)
+}

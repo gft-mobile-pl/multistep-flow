@@ -16,24 +16,13 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
 ) {
     internal lateinit var flow: MultiStepFlow<in Type>
 
-    suspend fun <FlowType : MultiStepFlow<in Type>> performAction(
-        action: Action<in Type, FlowType>,
-        transactionId: String = UUID.randomUUID().toString(),
-    ) = performActionImplementation(action = action, null, transactionId = transactionId)
-
-    suspend fun <FlowType : MultiStepFlow<in Type>> performAction(
-        action: Action<in Type, FlowType>,
-        dispatcher: CoroutineDispatcher,
-        transactionId: String = UUID.randomUUID().toString(),
-    ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
-
     suspend fun performAction(
-        action: MultiFlowAction<in Type, in Type>,
+        action: Action<in Type, in Type>,
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, null, transactionId = transactionId)
 
     suspend fun performAction(
-        action: MultiFlowAction<in Type, in Type>,
+        action: Action<in Type, in Type>,
         dispatcher: CoroutineDispatcher,
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)

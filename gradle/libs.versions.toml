@@ -3,6 +3,7 @@ agp = "8.4.2"
 kotlin = "1.9.22"
 coreKtx = "1.13.1"
 observableSession = "1.0.0"
+coroutinesGftx = "1.0.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
@@ -22,6 +23,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 gft-observablesession = { module = "com.gft.mobile:observable-session", version.ref = "observableSession" }
+gft-coroutines = { module = "com.gft.mobile:coroutines", version.ref = "coroutinesGftx" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinVersion" }
 
 [plugins]
