@@ -22,7 +22,8 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
             FlowState(
                 currentStep = initialStep as Step<*, *, *, *, *>,
                 isAnyOperationInProgress = false,
-                stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList()
+                stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
+                lifecycleState = MultiStepFlow.LifecycleState.Started
             )
         )
     }

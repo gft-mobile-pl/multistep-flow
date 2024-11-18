@@ -1,5 +1,6 @@
 package com.gft.multistepflow
 
+import com.gft.multistepflow.MultiStepFlow.LifecycleState
 import com.gft.multistepflow.operations.EndFlow
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.observablesession.Session
@@ -17,6 +18,14 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
                 "currentStep=${session.data.value?.currentStep ?: "[none]"}, " +
                 "stepsHistory=${session.data.value?.stepsHistory?.map { step -> step.type::class.simpleName } ?: "[none]"})"
     }
+
+    sealed interface LifecycleState {
+        data object Started: LifecycleState
+        data object NotInitialized: LifecycleState
+        data class Clearing internal constructor(
+            internal val ownerId: String
+        ) : LifecycleState
+    }
 }
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
@@ -29,15 +38,18 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
     val isAnyOperationInProgress: Boolean,
     val stepsHistory: List<Step<*, *, *, *, *>>,
+    val lifecycleState: LifecycleState
 ) {
     internal fun copy(
         currentStep: Step<*, *, *, *, *> = this.currentStep,
         isAnyOperationInProgress: Boolean = this.isAnyOperationInProgress,
         stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory,
+        lifecycleState: LifecycleState = this.lifecycleState
     ) = FlowState(
         currentStep = currentStep,
         isAnyOperationInProgress = isAnyOperationInProgress,
-        stepsHistory = stepsHistory
+        stepsHistory = stepsHistory,
+        lifecycleState = lifecycleState
     )
 
     override fun toString(): String {

@@ -29,6 +29,8 @@ class EndFlow internal constructor(val flow: MultiStepFlow<*>) {
             flow.mutex.unlock()
             onEnd.receive()
         } else {
+
+
             flow.mutex.withLock {
                 flow.session.end()
             }
