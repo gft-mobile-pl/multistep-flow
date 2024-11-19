@@ -3,15 +3,14 @@ package com.gft.multistepflow.operations
 import com.gft.multistepflow.Action
 import com.gft.multistepflow.DefaultNoOpValidator
 import com.gft.multistepflow.MultiStepFlow
-import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.end
+import com.gft.multistepflow.performAction
 import com.gft.multistepflow.start
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test

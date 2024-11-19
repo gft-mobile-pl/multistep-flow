@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.gft.coroutines)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
 }
 
 mavenPublishing {

@@ -13,7 +13,9 @@ import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestFourthStepT
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestSecondStepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestThirdStepType
 import com.gft.multistepflow.operations.SetStepTest.UnrelatedTestStepType.SomeUnrelatedStepType
+import com.gft.multistepflow.performAction
 import com.gft.multistepflow.start
+import com.gft.multistepflow.utils.unwrapNotActionErrorException
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -30,12 +32,13 @@ internal class SetStepTest {
     private class TestFlow(historyEnabled: Boolean) : MultiStepFlow<TestStepType<*, *, *, *>>(historyEnabled) {
         suspend fun performInActionScope(block: suspend Action<Any, TestStepType<*, *, *, *>>.() -> Unit) {
             @Suppress("UNCHECKED_CAST")
-            (session.data.value?.currentStep as? Step<TestStepType<*, *, *, *>, *, *, *, *>)
-                ?.performAction(object : Action<Any, TestStepType<*, *, *, *>>() {
+            (session.data.value?.currentStep as? Step<TestStepType<*, *, *, *>, *, *, *, *>)?.let { step ->
+                step.performAction(object : Action<Any, TestStepType<*, *, *, *>>() {
                     override suspend fun perform(flow: MultiStepFlow<TestStepType<*, *, *, *>>, transactionId: String) {
                         block()
                     }
                 })
+            }
         }
     }
 
@@ -57,7 +60,6 @@ internal class SetStepTest {
                 val unrelatedStep = Step(SomeUnrelatedStepType)
                 val unrelatedFlow = UnrelatedTestFlow()
 //                unrelatedFlow.setStep(unrelatedStep) // compilation error: PASSED
-
 //                flow.setStep(unrelatedStep) // compilation error: PASSED
             }
         }
@@ -520,5 +522,3 @@ internal class SetStepTest {
         }
     }
 }
-
-private fun Exception.unwrapNotActionErrorException() = if (this is NotActionErrorException) this.error else this

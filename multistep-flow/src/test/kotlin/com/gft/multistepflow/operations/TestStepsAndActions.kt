@@ -5,8 +5,8 @@ import com.gft.multistepflow.BaseUserInputValidator
 import com.gft.multistepflow.DefaultNoOpValidator
 import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
-import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
+import com.gft.multistepflow.operations.NotRelatedSteps.NotRelatedCancellableStepType
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithCardStep
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithQRCodeStep
 
@@ -25,7 +25,10 @@ sealed interface PaymentStep<Payload, UserInput, ValidationResult, Validator : B
         PaymentStep<Payload, UserInput, ValidationResult, Validator>
 }
 
-data object NotRelatedCancellableStepType : StepType<Unit, Unit, Unit, DefaultNoOpValidator>, CancellableStep
+sealed interface NotRelatedSteps<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>> :
+    StepType<Payload, UserInput, ValidationResult, Validator> {
+    data object NotRelatedCancellableStepType : NotRelatedSteps<Unit, Unit, Unit, DefaultNoOpValidator>, CancellableStep
+}
 
 // supports both Card payment and QRCode payment
 data object ProvideUserData : PaymentWithCardStep<String, Unit, Unit, DefaultNoOpValidator>,
@@ -56,6 +59,12 @@ typealias PaymentWithQRCodeAction<T> = Action<T, PaymentWithQRCodeStep<*, *, *, 
 /**
  * Actions
  */
+class NotRelatedAction : Action<Any, NotRelatedCancellableStepType>() {
+    override suspend fun perform(flow: MultiStepFlow<NotRelatedCancellableStepType>, transactionId: String) {
+        println("#Test NotRelatedAction.perform")
+    }
+}
+
 class CancelPaymentAction : AnyPaymentTypeAction<CancellableStep>() {
     override suspend fun performAction(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
         println("#Test CancelPaymentAction.perform")

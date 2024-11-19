@@ -13,6 +13,7 @@ coroutines = "1.7.3"
 jetbrainsKotlinJvm = "1.9.22"
 mavenPublishVersion = "0.30.0"
 koinVersion = "3.4.0"
+mocck = "1.13.13"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,6 +26,7 @@ coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", ve
 gft-observablesession = { module = "com.gft.mobile:observable-session", version.ref = "observableSession" }
 gft-coroutines = { module = "com.gft.mobile:coroutines", version.ref = "coroutinesGftx" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinVersion" }
+mockk = { module = "io.mockk:mockk", version.ref = "mocck" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

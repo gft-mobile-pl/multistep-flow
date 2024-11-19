@@ -1,8 +1,6 @@
 package com.gft.multistepflow
 
 import com.gft.multistepflow.operations.PerformAction
-import kotlinx.coroutines.CoroutineDispatcher
-import java.util.UUID
 
 interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>>
 
@@ -14,34 +12,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     internal val userInputValidator: Validator? = null,
     val error: ActionError? = null,
 ) {
-    internal lateinit var flow: MultiStepFlow<in Type>
-
-    suspend fun performAction(
-        action: Action<in Type, in Type>,
-        transactionId: String = UUID.randomUUID().toString(),
-    ) = performActionImplementation(action = action, null, transactionId = transactionId)
-
-    suspend fun performAction(
-        action: Action<in Type, in Type>,
-        dispatcher: CoroutineDispatcher,
-        transactionId: String = UUID.randomUUID().toString(),
-    ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
-
-    private suspend fun performActionImplementation(
-        action: Action<*, *>,
-        dispatcher: CoroutineDispatcher? = null,
-        transactionId: String = UUID.randomUUID().toString(),
-    ) {
-        if (!::flow.isInitialized) {
-            throw IllegalStateException("You must add the step to the flow before performing any action.")
-        }
-        PerformAction.performAction(
-            action = action,
-            flow = flow,
-            dispatcher = dispatcher,
-            transactionId = transactionId
-        )
-    }
+    internal var flow: MultiStepFlow<in Type>? = null
 
     // Suppressing warning for unused generic type - it's not used here inside of the class, but it's used to ensure type safety when getting actions from steps
     @Suppress("unused")
@@ -136,3 +107,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         operator fun <Type : StepType<Unit, Unit, Unit, DefaultNoOpValidator>> invoke(type: Type) = Step(type, Unit, Unit, Unit)
     }
 }
+
+val <Type : StepType<*, *, *, *>> Step<Type, *, *, *, *>.performAction: PerformAction<Type>
+    get() = PerformAction(flow)
