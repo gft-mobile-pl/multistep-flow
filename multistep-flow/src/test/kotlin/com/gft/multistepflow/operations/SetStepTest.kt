@@ -49,10 +49,11 @@ internal class SetStepTest {
 
     private class UnrelatedTestFlow : MultiStepFlow<UnrelatedTestStepType<*, *, *, *>>(historyEnabled = false)
 
+    private lateinit var testFlow: TestFlow
+
     @Test
     fun genericsTest() {
-        @Suppress("UNUSED_VARIABLE")
-        val action1 = object : Action<Any, TestStepType<*, *, *, *>>() {
+        object : Action<Any, TestStepType<*, *, *, *>>() {
             override suspend fun perform(flow: MultiStepFlow<TestStepType<*, *, *, *>>, transactionId: String) {
                 val step = Step(TestFirstStepType)
                 flow.setStep(step)
@@ -64,8 +65,7 @@ internal class SetStepTest {
             }
         }
 
-        @Suppress("UNUSED_VARIABLE")
-        val action2 = object : MultiFlowAction<CancellableStep, PaymentStep<*, *, *, *>>() {
+        object : MultiFlowAction<CancellableStep, PaymentStep<*, *, *, *>>() {
             override suspend fun performAction(flow: MultiStepFlow<out PaymentStep<*, *, *, *>>, transactionId: String) {
 //                flow.setStep(Step(ScanQRCode)) // compilation error: PASSED
 //                flow.setStep(Step(ProvideCardData, 5, Unit)) // compilation error: PASSED
@@ -78,23 +78,29 @@ internal class SetStepTest {
 
     }
 
-    private lateinit var testFlow: TestFlow
-
     @Test
+    fun `when set step is called on an unrelated flow, exception is throw`() {
+        //given
+        testFlow = TestFlow(historyEnabled = false)
+    }
+
+    @Test(expected = InvalidFlowException::class)
     fun `when the history is disabled and new step is set then history is empty`() {
         runBlocking {
             //given
             testFlow = TestFlow(historyEnabled = false)
+            val unrelatedFlow = TestFlow(historyEnabled = false)
 
             //when
             testFlow.start(Step(TestFirstStepType))
-            testFlow.performInActionScope {
-                testFlow.setStep(Step(TestSecondStepType))
-            }
 
-            //then
-            assert(testFlow.session.requireData().currentStep == Step(TestSecondStepType))
-            assert(testFlow.session.requireData().stepsHistory.isEmpty())
+            try {
+                testFlow.performInActionScope {
+                    unrelatedFlow.setStep(Step(TestSecondStepType))
+                }
+            } catch (error: Throwable) {
+                throw error.unwrapNotActionErrorException()
+            }
         }
     }
 
@@ -107,7 +113,6 @@ internal class SetStepTest {
             //when
             testFlow.start(Step(TestFirstStepType))
             testFlow.performInActionScope {
-
                 testFlow.setStep(Step(TestSecondStepType))
             }
 
