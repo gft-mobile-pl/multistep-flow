@@ -5,6 +5,7 @@ import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import kotlinx.coroutines.sync.withLock
+import java.util.UUID
 
 class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
     private val flow: MultiStepFlow<FlowStepType>,
@@ -21,9 +22,9 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
         flow.session.start(
             FlowState(
                 currentStep = initialStep as Step<*, *, *, *, *>,
-                isAnyOperationInProgress = false,
+                currentActionJob = null,
                 stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
-                lifecycleState = MultiStepFlow.Lifecycle.State.Started
+                lifecycleState = MultiStepFlow.Lifecycle.State.Started(UUID.randomUUID().toString())
             )
         )
     }

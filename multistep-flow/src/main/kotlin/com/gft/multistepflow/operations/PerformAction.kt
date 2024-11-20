@@ -3,14 +3,19 @@ package com.gft.multistepflow.operations
 import com.gft.multistepflow.Action
 import com.gft.multistepflow.ActionError
 import com.gft.multistepflow.MultiStepFlow
+import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.StepType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 
 private class PerformActionContext(
     val flow: MultiStepFlow<*>,
@@ -34,16 +39,17 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
         transactionId: String = UUID.randomUUID().toString(),
     ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
 
-
     private suspend fun performActionImplementation(
         action: Action<*, *>,
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
-    ): Unit = withContext(NonCancellable) {
+    ) {
         if (flow == null) {
             throw IllegalStateException("You must add the step to the flow before performing any action.")
         }
-        if (!flow.session.isStarted) throw IllegalStateException("Action $action cannot be performed - flow is not started.")
+
+        val sessionId = (flow.session.data.value?.lifecycleState as? Lifecycle.State.Started)?.sessionId
+            ?: throw IllegalStateException("Action $action cannot be performed - flow is not started.")
 
         if (coroutineContext.isPerformActionContext(flow)) {
             throw InvalidFlowException(
@@ -52,47 +58,67 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                         "To enqueue the action, ensure Step.performAction(Action) is invoked in a parallel scope, such as GlobalScope."
             )
         } else withContext(PerformActionContext(flow)) actionContent@{
-            flow.mutex.lock()
+            supervisorScope {
+                flow.mutex.lock()
 
-            flow.session.update { flowState ->
-                flowState.copy(isAnyOperationInProgress = true)
-            }
-            try {
-                if (dispatcher != null) {
-                    withContext(dispatcher) {
+                var unhandledError: NotActionErrorException? = null
+
+                val actionJob = async(start = CoroutineStart.LAZY) {
+                    if (dispatcher != null) {
+                        withContext(dispatcher) {
+                            action.internalPerform(flow, transactionId)
+                        }
+                    } else {
                         action.internalPerform(flow, transactionId)
                     }
-                } else {
-                    action.internalPerform(flow, transactionId)
                 }
 
-                if (!flow.session.isStarted) return@actionContent
-                flow.session.update { flowState ->
-                    flowState.copy(isAnyOperationInProgress = false)
-                }
-            } catch (error: Throwable) {
-                if (!flow.session.isStarted) {
-                    throw IllegalStateException("Cannot handle action error, as flow has already ended.", error)
-                }
-
-                if (error is ActionError) {
-                    flow.session.update { flowState ->
-                        flowState.copy(
-                            isAnyOperationInProgress = false,
-                            currentStep = flowState.currentStep.copy(
-                                error = error
+                actionJob.invokeOnCompletion { error ->
+                    when (error) {
+                        is ActionError -> flow.session.update { flowState ->
+                            flowState.copy(
+                                currentActionJob = null,
+                                currentStep = flowState.currentStep.copy(
+                                    error = error
+                                )
                             )
-                        )
+                        }
+
+                        null, is CancellationException -> flow.session.update { flowState ->
+                            flowState.copy(currentActionJob = null)
+                        }
+
+                        else -> unhandledError = NotActionErrorException(error, action)
                     }
-                } else {
-                    throw NotActionErrorException(error, action)
-                }
-            } finally {
-                try {
+
                     flow.mutex.unlock()
-                } catch (error: Throwable) {
-                    // nothing - mutex was unlocked by some other action internally
                 }
+
+                var skipAction = false
+                try {
+                    flow.session.update { flowState ->
+                        if (sessionId != flowState.lifecycleState.sessionId) {
+                            // flow is clearing or was restarted
+                            skipAction = true
+                            flowState
+                        } else {
+                            skipAction = false
+                            flowState.copy(currentActionJob = actionJob)
+                        }
+                    }
+                } catch (error: Throwable) {
+                    // flow has ended in the meantime
+                    skipAction = true
+                }
+
+
+                if (skipAction) {
+                    flow.mutex.unlock()
+                    return@supervisorScope
+                }
+
+                actionJob.join()
+                unhandledError?.apply { throw this }
             }
         }
     }
@@ -116,11 +142,10 @@ class PerformChildAction<Type : StepType<*, *, *, *>> internal constructor(
         action: Action<*, *>,
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
-    ): Unit = withContext(NonCancellable) {
+    ) {
         if (flow == null) {
             throw IllegalStateException("You must add the step to the flow before performing any action.")
         }
-        if (!flow.session.isStarted) throw IllegalStateException("Action $action cannot be performed - flow is not started.")
 
         if (coroutineContext.isPerformActionContext(flow)) {
             if (dispatcher != null) {

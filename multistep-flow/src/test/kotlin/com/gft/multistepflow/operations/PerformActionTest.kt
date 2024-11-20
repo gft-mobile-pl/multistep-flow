@@ -1,9 +1,11 @@
 package com.gft.multistepflow.operations
 
 import com.gft.multistepflow.Action
+import com.gft.multistepflow.ActionError
 import com.gft.multistepflow.DefaultNoOpValidator
 import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
+import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.annotations.PerformActionInActionScope
@@ -21,9 +23,26 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
+import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PerformActionTest {
@@ -40,6 +59,111 @@ class PerformActionTest {
             block(flow)
         }
     }
+
+    @Test
+    fun `when Step_performAction is cancelled, skip all pending actions`() =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val onActionCancelled = MutableStateFlow<Unit?>(null)
+            val lastActionTask = mockk<Runnable> { every { run() } just Runs }
+            val action = spyk(TestFlowAction {
+                onActionCancelled.filterNotNull().first()
+                lastActionTask.run()
+            })
+
+            testFlow.start(testStep)
+
+            val job = asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(action)
+            }
+            job.cancelAndJoin()
+            onActionCancelled.emit(Unit)
+
+            verify {
+                lastActionTask wasNot called
+            }
+            assertFalse(testFlow.session.data.value!!.isAnyOperationInProgress)
+        }
+
+    @Test
+    fun `when Step_performAction is cancelled, Action is cancelled as well`() =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val onActionCancelled = MutableStateFlow<Unit?>(null)
+            val lastActionTask = mockk<Runnable> { every { run() } just Runs }
+            val action = spyk(TestFlowAction {
+                onActionCancelled.filterNotNull().first()
+                lastActionTask.run()
+            })
+
+            testFlow.start(testStep)
+
+            val job = asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(action)
+            }
+            job.cancelAndJoin()
+            onActionCancelled.emit(Unit)
+
+            verify {
+                lastActionTask wasNot called
+            }
+            assertFalse(testFlow.session.data.value!!.isAnyOperationInProgress)
+        }
+
+    @Suppress("DeferredResultUnused")
+    @Test
+    fun `when Step_performAction is in progress, FlowState_isAnyOperationInProgress should return true`() =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val onContinueAction = Channel<Unit>()
+            val action = spyk(TestFlowAction {
+                onContinueAction.receive()
+            })
+
+            testFlow.start(testStep)
+
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(action)
+            }
+            assertTrue(testFlow.session.data.value!!.isAnyOperationInProgress)
+
+            onContinueAction.send(Unit)
+
+            assertFalse(testFlow.session.data.value!!.isAnyOperationInProgress)
+        }
+
+
+    @Test(expected = NotActionErrorException::class)
+    fun `given action throws error other then ActionError, when Step_performAction is invoked, NotActionErrorException is throw`() =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val action1 = spyk(TestFlowAction {
+                throw RuntimeException("Action Error")
+            })
+
+            testFlow.start(testStep)
+            testStep.performAction(action1)
+        }
+
+    @Test
+    fun `given action throws ActionError, when Step_performAction is invoked, error is written into flow state`() =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val error = RuntimeException("some error")
+            val action1 = spyk(TestFlowAction {
+                throw ActionError(error, this, false, "")
+            })
+
+            testFlow.start(testStep)
+            testStep.performAction(action1)
+
+            assertEquals(error, testFlow.session.data.value?.currentStep?.error?.cause)
+        }
 
     @Suppress("DeferredResultUnused")
     @Test
@@ -179,6 +303,7 @@ class PerformActionTest {
 
             try {
                 testStep.performAction(TestFlowAction {
+                    println("Action started")
                     testStep.performAction(TestFlowAction {}) // opt-in applied to the test method (!)
                 })
             } catch (error: Throwable) {

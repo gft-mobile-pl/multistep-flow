@@ -4,6 +4,7 @@ import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.operations.EndFlow
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.observablesession.Session
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -14,17 +15,27 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
 ) {
     internal val session: Session<FlowState<*, *, *, *>> = Session()
 
-    val lifecycle: StateFlow<Lifecycle.State>  = Lifecycle(session.data)
+    val lifecycle: StateFlow<Lifecycle.State> = Lifecycle(session.data)
 
-    class Lifecycle internal constructor(private val flowState: StateFlow<FlowState<*, *, *, *>?>) : StateFlow<Lifecycle.State> {
-        sealed interface State {
-            data object Started: State
-            data object NotInitialized: State
-            data class Clearing internal constructor(
-                internal val ownerId: String
-            ) : State
+    class Lifecycle internal constructor(private val flowState: StateFlow<FlowState<*, *, *, *>?>) :
+        StateFlow<Lifecycle.State> {
+        sealed class State(val sessionId: String) {
+            class Started internal constructor(sessionId: String) : State(sessionId)
+            data object NotInitialized : State("")
+            class Clearing internal constructor(sessionId: String) : State(sessionId)
 
-            fun isStarted(): Boolean = this == Started
+            fun isStarted(): Boolean = this is Started
+
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other !is State) return false
+                if (sessionId != other.sessionId) return false
+                return true
+            }
+
+            override fun hashCode(): Int {
+                return sessionId.hashCode() ?: 0
+            }
         }
 
         override val replayCache: List<State>
@@ -57,20 +68,22 @@ val MultiStepFlow<*>.end: EndFlow
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
-    val isAnyOperationInProgress: Boolean,
+    internal val currentActionJob: Job?,
     val stepsHistory: List<Step<*, *, *, *, *>>,
-    val lifecycleState: Lifecycle.State
+    val lifecycleState: Lifecycle.State,
 ) {
+    val isAnyOperationInProgress: Boolean = currentActionJob != null
+
     internal fun copy(
         currentStep: Step<*, *, *, *, *> = this.currentStep,
-        isAnyOperationInProgress: Boolean = this.isAnyOperationInProgress,
+        currentActionJob: Job? = this.currentActionJob,
         stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory,
-        lifecycleState: Lifecycle.State = this.lifecycleState
+        lifecycleState: Lifecycle.State = this.lifecycleState,
     ) = FlowState(
         currentStep = currentStep,
-        isAnyOperationInProgress = isAnyOperationInProgress,
+        currentActionJob = currentActionJob,
         stepsHistory = stepsHistory,
-        lifecycleState = lifecycleState
+        lifecycleState = lifecycleState,
     )
 
     override fun toString(): String {
