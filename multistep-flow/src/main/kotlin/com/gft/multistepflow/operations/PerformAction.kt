@@ -84,8 +84,14 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                             )
                         }
 
-                        null, is CancellationException -> flow.session.update { flowState ->
-                            flowState.copy(currentActionJob = null)
+                        is ClearFlowException -> {
+                            // flow is about to end or has ended
+                        }
+
+                        null, is CancellationException -> {
+                            flow.session.update { flowState ->
+                                flowState.copy(currentActionJob = null)
+                            }
                         }
 
                         else -> unhandledError = NotActionErrorException(error, action)
@@ -111,9 +117,8 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                     skipAction = true
                 }
 
-
                 if (skipAction) {
-                    flow.mutex.unlock()
+                    actionJob.cancel(ClearFlowException())
                     return@supervisorScope
                 }
 

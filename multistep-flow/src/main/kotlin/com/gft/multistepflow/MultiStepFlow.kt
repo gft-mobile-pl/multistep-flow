@@ -1,7 +1,7 @@
 package com.gft.multistepflow
 
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
-import com.gft.multistepflow.operations.EndFlow
+import com.gft.multistepflow.operations.ClearFlow
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.observablesession.Session
 import kotlinx.coroutines.Job
@@ -36,6 +36,8 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
             override fun hashCode(): Int {
                 return sessionId.hashCode() ?: 0
             }
+
+            override fun toString(): String = "${this::class.simpleName}(sessionId=$sessionId)"
         }
 
         override val replayCache: List<State>
@@ -63,8 +65,8 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
     get() = StartFlow(this)
 
-val MultiStepFlow<*>.end: EndFlow
-    get() = EndFlow(this)
+val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.clear: ClearFlow
+    get() = ClearFlow(this)
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
