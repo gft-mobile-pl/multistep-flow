@@ -23,9 +23,12 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -47,6 +50,90 @@ class PerformActionTest {
     ) : Action<TestStep, TestStep>() {
         override suspend fun perform(flow: MultiStepFlow<TestStep>, transactionId: String) {
             block(flow)
+        }
+    }
+
+    @Test
+    fun `time based - skip cancelled actions`(): Unit = runBlocking {
+        val testStep = Step(TestStep)
+        val testFlow = TestFlow()
+
+        val action1Task = mockk<java.lang.Runnable> { every { run() } just Runs }
+        val action2Task = mockk<java.lang.Runnable> { every { run() } just Runs }
+        val action3Task = mockk<java.lang.Runnable> { every { run() } just Runs }
+
+        testFlow.start(testStep)
+
+
+        val job1 = asyncUndispatchedOnUnconfinedDispatcher {
+            testStep.performAction(TestFlowAction {
+                delay(1500)
+                action1Task.run()
+            })
+        }
+
+        val job2 = asyncUndispatchedOnUnconfinedDispatcher {
+            testStep.performAction(TestFlowAction {
+                action2Task.run()
+            })
+        }
+
+        val job3 = asyncUndispatchedOnUnconfinedDispatcher {
+            testStep.performAction(TestFlowAction {
+                delay(500)
+                action3Task.run()
+            })
+        }
+
+        delay(100)
+        job2.cancel()
+        job3.cancel()
+        job1.await()
+
+        verify {
+            action1Task.run()
+            action2Task wasNot called
+            action3Task wasNot called
+        }
+    }
+
+    @Test
+    fun `time based - perform actions in order of perform method`(): Unit = runBlocking {
+        val testStep = Step(TestStep)
+        val testFlow = TestFlow()
+
+        val action1Task = mockk<java.lang.Runnable> { every { run() } just Runs }
+        val action2Task = mockk<java.lang.Runnable> { every { run() } just Runs }
+        val action3Task = mockk<java.lang.Runnable> { every { run() } just Runs }
+
+        testFlow.start(testStep)
+
+        awaitAll(
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(TestFlowAction {
+                    delay(1500)
+                    action1Task.run()
+                })
+            },
+
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(TestFlowAction {
+                    action2Task.run()
+                })
+            },
+
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(TestFlowAction {
+                    delay(500)
+                    action3Task.run()
+                })
+            }
+        )
+
+        verifyOrder {
+            action1Task.run()
+            action2Task.run()
+            action3Task.run()
         }
     }
 

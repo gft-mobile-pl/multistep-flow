@@ -45,7 +45,7 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
             } else {
                 flow.session.data.value?.currentActionJob?.cancelAndJoin()
 
-                // we need to check the sessionId as flow could be restarted in the meantime (e.g. by a non cancellable action)
+                // we need to check the sessionId as flow could be restarted (with MultiStepFlow.Restart()) in the meantime (e.g. by a non cancellable action)
                 if (sessionId == flow.lifecycle.value.sessionId) {
                     flow.session.end()
                 }
