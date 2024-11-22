@@ -5,12 +5,12 @@ import com.gft.multistepflow.ActionError
 import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.NotActionErrorException
+import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.coroutines.AbstractCoroutineContextElement
@@ -43,87 +43,94 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
         action: Action<*, *>,
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
-    ) {
+    ): Result<Step<*, *, *, *, *>> {
         if (flow == null) {
             throw IllegalStateException("You must add the step to the flow before performing any action.")
         }
 
-        val sessionId = (flow.session.data.value?.lifecycleState as? Lifecycle.State.Started)?.sessionId
-            ?: throw IllegalStateException("Action $action cannot be performed - flow is not started.")
-
         if (coroutineContext.isPerformActionContext(flow)) {
-            throw InvalidFlowException(
-                "Calling Step.performAction(Action) within another Action currently being performed in the scope of a flow to which the Step belongs is not allowed. " +
-                        "If you need to launch the action immediately, use Step.performChildAction(Action) instead. " +
-                        "To enqueue the action, ensure Step.performAction(Action) is invoked in a parallel scope, such as GlobalScope."
+            throw IllegalFlowException(
+                "Calling Step.performAction(Action) within an Action being performed in the scope of a flow to which the Step belongs is not allowed. " +
+                        "If you need to launch the action immediately, use Step.performChildAction(Action) instead. "
             )
-        } else withContext(PerformActionContext(flow)) actionContent@{
-            supervisorScope {
-                flow.mutex.lock()
+        }
 
-                var unhandledError: NotActionErrorException? = null
-
+        return try {
+            withContext<Result<Step<*, *, *, *, *>>>(PerformActionContext(flow)) {
                 val actionJob = async(start = CoroutineStart.LAZY) {
-                    if (dispatcher != null) {
-                        withContext(dispatcher) {
+                    try {
+                        if (dispatcher != null) {
+                            withContext(dispatcher) {
+                                action.internalPerform(flow, transactionId)
+                            }
+                        } else {
                             action.internalPerform(flow, transactionId)
                         }
-                    } else {
-                        action.internalPerform(flow, transactionId)
+                    } catch (error: Throwable) {
+                        when (error) {
+                            is CancellationException, is ActionError -> throw error
+                            else -> throw NotActionErrorException(error, action)
+                        }
                     }
                 }
 
                 actionJob.invokeOnCompletion { error ->
+                    if (flow.lifecycle.value is Lifecycle.State.NotInitialized) {
+                        // flow is already cleared
+                        // this scenario happens when MultiStepFlow_clear is called inside an Action
+                        return@invokeOnCompletion
+                    }
+
                     when (error) {
-                        is ActionError -> flow.session.update { flowState ->
-                            flowState.copy(
-                                currentActionJob = null,
-                                currentStep = flowState.currentStep.copy(
-                                    error = error
-                                )
-                            )
+                        // action completed or cancelled
+                        null, is CancellationException -> flow.session.update { flowState ->
+                            flowState.copy(currentAction = null)
                         }
 
-                        is ClearFlowException -> {
-                            // flow is about to end or has ended
-                        }
-
-                        null, is CancellationException -> {
+                        // action failed in a controlled way
+                        is ActionError -> {
                             flow.session.update { flowState ->
-                                flowState.copy(currentActionJob = null)
+                                flowState.copy(
+                                    currentAction = null,
+                                    currentStep = flowState.currentStep.copy(
+                                        error = error
+                                    )
+                                )
                             }
                         }
 
-                        else -> unhandledError = NotActionErrorException(error, action)
-                    }
-
-                    flow.mutex.unlock()
-                }
-
-                var skipAction = false
-                try {
-                    flow.session.update { flowState ->
-                        if (sessionId != flowState.lifecycleState.sessionId) {
-                            // flow is clearing or was restarted
-                            skipAction = true
-                            flowState
-                        } else {
-                            skipAction = false
-                            flowState.copy(currentActionJob = actionJob)
+                        // improperly handled error
+                        else -> {
+                            // no need to clear flow state -> we will let the app to crash
                         }
                     }
-                } catch (error: Throwable) {
-                    // flow has ended in the meantime
-                    skipAction = true
                 }
 
-                if (skipAction) {
-                    actionJob.cancel(ClearFlowException())
-                    return@supervisorScope
+                flow.session.update { flowState ->
+                    if (flowState.lifecycleState is Lifecycle.State.Started) {
+                        if (flowState.currentActionJob != null) {
+                            throw AnotherActionInProgressException()
+                        } else {
+                            flowState.copy(currentAction = actionJob)
+                        }
+                    } else {
+                        throw IllegalFlowStateException("Action $action cannot be performed - flow is not started.")
+                    }
                 }
 
-                actionJob.join()
-                unhandledError?.apply { throw this }
+                actionJob.await()
+                Result.success(flow.session.data.value!!.currentStep)
+            }
+        } catch (error: Throwable) {
+            when (error) {
+                // properly handled error
+                is CancellationException, is ActionError, is AnotherActionInProgressException, is IllegalFlowStateException -> {
+                    Result.failure(error)
+                }
+
+                // unhandled error: someone forgot to wrap the error in ActionError or used performAction incorrectly
+                // -> we will let the app crash
+                else -> throw error
             }
         }
     }
@@ -161,7 +168,7 @@ class PerformChildAction<Type : StepType<*, *, *, *>> internal constructor(
                 action.internalPerform(flow, transactionId)
             }
         } else {
-            throw InvalidFlowException(
+            throw IllegalFlowException(
                 "Step.performChildAction(Action) may only be called within an Action currently being performed in the scope of a flow to which the Step belongs. " +
                         "If you intend to perform an Action on a different flow, opt-in to Step.performAction(Action)."
             )

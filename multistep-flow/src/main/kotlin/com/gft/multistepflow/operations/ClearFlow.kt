@@ -4,7 +4,6 @@ import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -22,6 +21,7 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
                     flowState
                 } else {
                     sessionId = UUID.randomUUID().toString()
+                    flowState.currentActionJob?.cancel(ClearFlowException())
                     flowState.copy(lifecycleState = Lifecycle.State.Clearing(sessionId))
                 }
             }
@@ -35,7 +35,7 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
                 flow.session.end()
             }
 
-            // throwing ClearFlowException will end the current action immediately
+            // throwing ClearFlowException will end the current action immediately even if it is not cancellable
             throw ClearFlowException()
         } else {
             if (isClearingAlready) {
@@ -43,7 +43,7 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
                     sessionId != state.sessionId
                 }
             } else {
-                flow.session.data.value?.currentActionJob?.cancelAndJoin()
+                flow.session.data.value?.currentActionJob?.join()
 
                 // we need to check the sessionId as flow could be restarted (with MultiStepFlow.Restart()) in the meantime (e.g. by a non cancellable action)
                 if (sessionId == flow.lifecycle.value.sessionId) {

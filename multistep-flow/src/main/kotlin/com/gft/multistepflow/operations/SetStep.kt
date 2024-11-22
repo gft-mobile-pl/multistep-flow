@@ -15,7 +15,7 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
         reuseUserInput: Boolean = true,
     ) {
         if (!coroutineContext.isPerformActionContext(flow)) {
-            throw InvalidFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
+            throw IllegalFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
         }
 
         flow.session.update { flowState ->
@@ -63,7 +63,7 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
         clearHistoryInclusive: Boolean,
     ) {
         if (!coroutineContext.isPerformActionContext(flow)) {
-            throw InvalidFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
+            throw IllegalFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
         }
 
         flow.session.update { flowState ->

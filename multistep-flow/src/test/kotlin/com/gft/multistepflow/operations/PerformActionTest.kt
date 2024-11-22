@@ -9,6 +9,7 @@ import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.annotations.PerformActionInActionScope
+import com.gft.multistepflow.clear
 import com.gft.multistepflow.operations.NotRelatedSteps.NotRelatedCancellableStepType
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithQRCodeStep
 import com.gft.multistepflow.performAction
@@ -23,145 +24,42 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import io.mockk.verifyOrder
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Runnable
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PerformActionTest {
-    private object TestStep : StepType<Unit, Unit, Unit, DefaultNoOpValidator>
-    private class TestFlow : MultiStepFlow<TestStep>(historyEnabled = false)
+    sealed interface TestFlowStep : StepType<Unit, Unit, Unit, DefaultNoOpValidator>
+    private data object TestStep : TestFlowStep
+    private data object NextTestStep : TestFlowStep
+    private class TestFlow : MultiStepFlow<TestFlowStep>(historyEnabled = false)
 
     private object NotRelatedTestStep : StepType<Unit, Unit, Unit, DefaultNoOpValidator>
     private class NotRelatedTestFlow : MultiStepFlow<NotRelatedTestStep>(historyEnabled = false)
 
     private class TestFlowAction(
-        private val block: suspend TestFlowAction.(MultiStepFlow<TestStep>) -> Unit,
-    ) : Action<TestStep, TestStep>() {
-        override suspend fun perform(flow: MultiStepFlow<TestStep>, transactionId: String) {
+        private val name: String = "TestFlowAction",
+        private val block: suspend TestFlowAction.(MultiStepFlow<TestFlowStep>) -> Unit,
+    ) : Action<TestFlowStep, TestFlowStep>() {
+        override suspend fun perform(flow: MultiStepFlow<TestFlowStep>, transactionId: String) {
             block(flow)
         }
-    }
 
-    @Test
-    fun `time based - skip cancelled actions`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-
-        val action1Task = mockk<java.lang.Runnable> { every { run() } just Runs }
-        val action2Task = mockk<java.lang.Runnable> { every { run() } just Runs }
-        val action3Task = mockk<java.lang.Runnable> { every { run() } just Runs }
-
-        testFlow.start(testStep)
-
-
-        val job1 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                delay(1500)
-                action1Task.run()
-            })
-        }
-
-        val job2 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                action2Task.run()
-            })
-        }
-
-        val job3 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                delay(500)
-                action3Task.run()
-            })
-        }
-
-        delay(100)
-        job2.cancel()
-        job3.cancel()
-        job1.await()
-
-        verify {
-            action1Task.run()
-            action2Task wasNot called
-            action3Task wasNot called
+        override fun toString(): String {
+            return name
         }
     }
-
-    @Test
-    fun `time based - perform actions in order of perform method`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-
-        val action1Task = mockk<java.lang.Runnable> { every { run() } just Runs }
-        val action2Task = mockk<java.lang.Runnable> { every { run() } just Runs }
-        val action3Task = mockk<java.lang.Runnable> { every { run() } just Runs }
-
-        testFlow.start(testStep)
-
-        awaitAll(
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(TestFlowAction {
-                    delay(1500)
-                    action1Task.run()
-                })
-            },
-
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(TestFlowAction {
-                    action2Task.run()
-                })
-            },
-
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(TestFlowAction {
-                    delay(500)
-                    action3Task.run()
-                })
-            }
-        )
-
-        verifyOrder {
-            action1Task.run()
-            action2Task.run()
-            action3Task.run()
-        }
-    }
-
-    @Test
-    fun `when Step_performAction is cancelled, skip all pending actions`() =
-        runBlocking {
-            val testStep = Step(TestStep)
-            val testFlow = TestFlow()
-            val onActionCancelled = MutableStateFlow<Unit?>(null)
-            val lastActionTask = mockk<Runnable> { every { run() } just Runs }
-            val action = spyk(TestFlowAction {
-                onActionCancelled.filterNotNull().first()
-                lastActionTask.run()
-            })
-
-            testFlow.start(testStep)
-
-            val job = asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(action)
-            }
-            job.cancelAndJoin()
-            onActionCancelled.emit(Unit)
-
-            verify {
-                lastActionTask wasNot called
-            }
-            assertFalse(testFlow.session.data.value!!.isAnyOperationInProgress)
-        }
 
     @Test
     fun `when Step_performAction is cancelled, Action is cancelled as well`() =
@@ -174,7 +72,6 @@ class PerformActionTest {
                 onActionCancelled.filterNotNull().first()
                 lastActionTask.run()
             })
-
             testFlow.start(testStep)
 
             val job = asyncUndispatchedOnUnconfinedDispatcher {
@@ -214,7 +111,7 @@ class PerformActionTest {
 
 
     @Test(expected = NotActionErrorException::class)
-    fun `given action throws error other then ActionError, when Step_performAction is invoked, NotActionErrorException is throw`() =
+    fun `given action throws error other then ActionError, when Step_performAction is invoked, NotActionErrorException is throw`(): Unit =
         runBlocking {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
@@ -227,7 +124,83 @@ class PerformActionTest {
         }
 
     @Test
-    fun `given action throws ActionError, when Step_performAction is invoked, error is written into flow state`() =
+    fun `given Action sets new step, when Step_performAction is invoked, the result is Result_success(new step)`(): Unit =
+        runBlocking {
+            val testStep1 = Step(TestStep)
+            val testStep2  = Step(NextTestStep)
+            val testFlow = TestFlow()
+            val action = spyk(TestFlowAction {
+                testFlow.setStep(testStep2)
+            })
+
+            testFlow.start(testStep1)
+            val result = testStep1.performAction(action)
+
+            assertEquals(testStep2, result.getOrNull())
+        }
+
+    @Suppress("DeferredResultUnused")
+    @Test
+    fun `given flow is clearing, when Step_performAction is invoked,  the result is Result_failure(IllegalFlowStateException)`(): Unit =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val onContinueFirstAction = Channel<Unit>()
+            var actionResult: Result<Step<*, *, *, *, *>>? = null
+
+            testFlow.start(testStep)
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(TestFlowAction {
+                    withContext(NonCancellable) {
+                        onContinueFirstAction.receive()
+                    }
+                })
+            }
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testFlow.clear()
+            }
+            asyncUndispatchedOnUnconfinedDispatcher {
+                actionResult = testStep.performAction(TestFlowAction {})
+            }
+            onContinueFirstAction.send(Unit)
+
+            assertTrue(actionResult?.isFailure == true)
+            assertTrue(actionResult?.exceptionOrNull() is IllegalFlowStateException)
+            assertNull(testFlow.session.data.value?.currentStep?.error)
+        }
+
+    @Suppress("DeferredResultUnused")
+    @Test
+    fun `given flow is not started, when Step_performAction is invoked, IllegalFlowStateException is returned`(): Unit =
+        runBlocking {
+            val testStep = Step(TestStep)
+            val testFlow = TestFlow()
+            val onContinueFirstAction = Channel<Unit>()
+            var actionResult: Result<Step<*, *, *, *, *>>? = null
+
+            testFlow.start(testStep)
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testStep.performAction(TestFlowAction {
+                    withContext(NonCancellable) {
+                        onContinueFirstAction.receive()
+                    }
+                })
+            }
+            asyncUndispatchedOnUnconfinedDispatcher {
+                testFlow.clear()
+            }
+            asyncUndispatchedOnUnconfinedDispatcher {
+                actionResult = testStep.performAction(TestFlowAction {})
+            }
+            onContinueFirstAction.send(Unit)
+
+            assertTrue(actionResult?.isFailure == true)
+            assertTrue(actionResult?.exceptionOrNull() is IllegalFlowStateException)
+            assertNull(testFlow.session.data.value?.currentStep?.error)
+        }
+
+    @Test
+    fun `given action throws ActionError, when Step_performAction is invoked, error is written into flow state and result is Result_failure(ActionError)`() =
         runBlocking {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
@@ -237,86 +210,67 @@ class PerformActionTest {
             })
 
             testFlow.start(testStep)
-            testStep.performAction(action1)
+            val result = testStep.performAction(action1)
 
+            assertTrue(result.isFailure)
+            assertEquals((result.exceptionOrNull() as? ActionError)?.error, error)
             assertEquals(error, testFlow.session.data.value?.currentStep?.error?.cause)
         }
 
     @Suppress("DeferredResultUnused")
     @Test
-    fun `given outside of the Action scope, when Step_performAction is invoked multiple time, actions are enqueued`(): Unit =
+    fun `given outside of the Action scope, when Step_performAction is while previous action has not ended, the result is Result_failure(AnotherActionInProgressException)`(): Unit =
         runBlocking {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
             val allActionsQueued = Channel<Unit>()
+
             val action1 = spyk(TestFlowAction {
                 allActionsQueued.receive()
             })
             val action2 = spyk(TestFlowAction {})
-            val action3 = spyk(TestFlowAction {})
+            var action2Result: Result<Step<*, *, *, *, *>>? = null
 
             testFlow.start(testStep)
             asyncUndispatchedOnUnconfinedDispatcher {
                 testStep.performAction(action1)
             }
             asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(action2)
-            }
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(action3)
-            }
-
-            verify {
-                action2 wasNot called
-                action3 wasNot called
+                action2Result = testStep.performAction(action2)
             }
 
             allActionsQueued.send(Unit)
 
-            coVerifyOrder {
-                action1.internalPerform(testFlow, any())
-                action2.internalPerform(testFlow, any())
-                action3.internalPerform(testFlow, any())
-            }
+            assertTrue(action2Result?.isFailure == true)
+            assertTrue(action2Result?.exceptionOrNull() is AnotherActionInProgressException)
+            assertNull(testFlow.session.data.value?.currentStep?.error)
         }
 
-    @Suppress("DeferredResultUnused")
     @Test
-    fun `given inside the Action scope, when Step_performChildAction is invoked, action is performed immediately before queued actions`(): Unit =
+    fun `given inside the Action scope, when Step_performChildAction is invoked, action is performed immediately`(): Unit =
         runBlocking {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
-            val allActionsQueued = Channel<Unit>()
-            val action1Child = spyk(TestFlowAction {})
-            val action1 = spyk(TestFlowAction {
-                allActionsQueued.receive()
-                testStep.performChildAction(action1Child)
+            val lastParentActionTask = mockk<Runnable> { every { run() } just Runs }
+
+            val childAction = spyk(TestFlowAction {})
+            val parentAction = spyk(TestFlowAction {
+                testStep.performChildAction(childAction)
+                lastParentActionTask.run()
+
             })
-            val action2 = spyk(TestFlowAction {})
 
             testFlow.start(testStep)
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(action1)
-            }
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(action2)
-            }
-
-            verify {
-                action1Child wasNot called
-                action2 wasNot called
-            }
-
-            allActionsQueued.send(Unit)
+            testStep.performAction(parentAction)
 
             coVerifyOrder {
-                action1.internalPerform(testFlow, any())
-                action1Child.internalPerform(testFlow, any())
-                action2.internalPerform(testFlow, any())
+                parentAction.internalPerform(testFlow, any())
+                childAction.internalPerform(testFlow, any())
+                lastParentActionTask.run()
             }
         }
 
-    @Test(expected = InvalidFlowException::class)
+    @Test(expected = IllegalFlowException::class)
     fun `given inside a scope of an Action performed in scope of unrelated flow, when Step_performChildAction is invoked, an error is thrown`(): Unit =
         runBlocking {
             val testStep = Step(TestStep)
@@ -372,7 +326,7 @@ class PerformActionTest {
         }
 
     @OptIn(PerformActionInActionScope::class)
-    @Test(expected = InvalidFlowException::class)
+    @Test(expected = IllegalFlowException::class)
     fun `given inside the Action scope, when Step_performAction is invoked on a Step belonging to a flow in scope of which the current Action is performed, exception is thrown`(): Unit =
         runBlocking {
             val testStep = Step(TestStep)
@@ -380,7 +334,6 @@ class PerformActionTest {
 
             try {
                 testStep.performAction(TestFlowAction {
-                    println("Action started")
                     testStep.performAction(TestFlowAction {}) // opt-in applied to the test method (!)
                 })
             } catch (error: Throwable) {

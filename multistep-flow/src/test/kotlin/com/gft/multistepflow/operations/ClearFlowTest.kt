@@ -22,10 +22,12 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 
@@ -43,198 +45,6 @@ class ClearFlowTest {
             block(flow)
         }
     }
-
-    @Test
-    fun `time based - cancel single action`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-        val action1Task = mockk<Runnable> { every { run() } just Runs }
-
-        testFlow.start(testStep)
-
-        val job = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                delay(500)
-                action1Task.run()
-            })
-        }
-
-        delay(100)
-        testFlow.clear()
-
-        job.join()
-
-        verify {
-            action1Task wasNot called
-        }
-    }
-
-    @Test
-    fun `time based - cancel inside action`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-        val action0Task = mockk<Runnable> { every { run() } just Runs }
-        val pendingAction1 = spyk(TestFlowAction {
-            println("#Test 1")
-        })
-        val pendingAction2 = spyk(TestFlowAction {
-            println("#Test 2")
-        })
-
-        testFlow.start(testStep)
-
-        val job1 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                delay(1000)
-                testFlow.clear()
-                action0Task.run()
-            })
-        }
-        val job2 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction1)
-        }
-        val job3 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction2)
-        }
-
-        delay(500)
-        testFlow.clear()
-
-        awaitAll(job1, job2, job3)
-
-        verify(exactly = 0) {
-            action0Task.run()
-        }
-        verify {
-            pendingAction1 wasNot called
-            pendingAction2 wasNot called
-        }
-    }
-
-    @Test
-    fun `time based - cancel all actions`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-        val action0Task = mockk<Runnable> { every { run() } just Runs }
-        val pendingAction1 = spyk(TestFlowAction {
-            println("#Test 1")
-        })
-        val pendingAction2 = spyk(TestFlowAction {
-            println("#Test 2")
-        })
-
-        testFlow.start(testStep)
-
-        val job1 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                withContext(NonCancellable) {
-                    delay(500)
-                    action0Task.run()
-                }
-            })
-        }
-        val job2 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction1)
-        }
-        val job3 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction2)
-        }
-
-        delay(100)
-        testFlow.clear()
-
-        awaitAll(job1, job2, job3)
-
-        verify {
-            action0Task.run()
-            pendingAction1 wasNot called
-            pendingAction2 wasNot called
-        }
-    }
-
-    @Test
-    fun `time based - cancel first outside action, then in action`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-
-        val action0Task = mockk<Runnable> { every { run() } just Runs }
-        val pendingAction1 = spyk(TestFlowAction { println("#Test 1") })
-        val pendingAction2 = spyk(TestFlowAction { println("#Test 2") })
-
-        testFlow.start(testStep)
-
-        val job1 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                withContext(NonCancellable) {
-                    delay(500)
-                    testFlow.clear()
-                    action0Task.run()
-                }
-            })
-        }
-        val job2 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction1)
-        }
-        val job3 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction2)
-        }
-
-        delay(100)
-        testFlow.clear()
-
-        awaitAll(job1, job2, job3)
-
-        verify(exactly = 0) {
-            action0Task.run()
-        }
-        verify {
-            pendingAction1 wasNot called
-            pendingAction2 wasNot called
-        }
-    }
-
-
-    @Test
-    fun `time based - cancel first inside action, then outside of action`(): Unit = runBlocking {
-        val testStep = Step(TestStep)
-        val testFlow = TestFlow()
-
-        val action0Task = mockk<Runnable> { every { run() } just Runs }
-        val pendingAction1 = spyk(TestFlowAction { println("#Test 1") })
-        val pendingAction2 = spyk(TestFlowAction { println("#Test 2") })
-
-        testFlow.start(testStep)
-
-        val job1 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
-                withContext(NonCancellable) {
-                    delay(100)
-                    testFlow.clear()
-                    action0Task.run()
-                }
-            })
-        }
-        val job2 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction1)
-        }
-        val job3 = asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(pendingAction2)
-        }
-
-        delay(500)
-        testFlow.clear()
-
-        awaitAll(job1, job2, job3)
-
-        verify(exactly = 0) {
-            action0Task.run()
-        }
-        verify {
-            pendingAction1 wasNot called
-            pendingAction2 wasNot called
-        }
-    }
-
 
     @Test
     fun `given no Action in progress, when MultiStepFlow_clear is invoked, clear the flow`(): Unit = runBlocking {
@@ -255,10 +65,11 @@ class ClearFlowTest {
         val testFlow = TestFlow()
         val onContinueAction = Channel<Unit>()
         val lastActionTask = mockk<Runnable> { every { run() } just Runs }
+        var actionResult: Result<*>? = null
 
         testFlow.start(testStep)
         asyncUndispatchedOnUnconfinedDispatcher {
-            testStep.performAction(TestFlowAction {
+            actionResult = testStep.performAction(TestFlowAction {
                 onContinueAction.receive()
                 lastActionTask.run()
             })
@@ -271,6 +82,7 @@ class ClearFlowTest {
             lastActionTask wasNot called
         }
 
+        assertTrue(actionResult?.exceptionOrNull() is ClearFlowException)
         assertNull(testFlow.session.data.value)
         assertEquals(Lifecycle.State.NotInitialized, testFlow.lifecycle.value)
     }
@@ -282,10 +94,11 @@ class ClearFlowTest {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
             val lastActionTask = mockk<Runnable> { every { run() } just Runs }
+            var actionResult: Result<*>? = null
 
             testFlow.start(testStep)
             asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(TestFlowAction {
+                actionResult = testStep.performAction(TestFlowAction {
                     testFlow.clear()
                     lastActionTask.run()
                 })
@@ -295,89 +108,38 @@ class ClearFlowTest {
                 lastActionTask wasNot called
             }
 
+            assertTrue(actionResult?.exceptionOrNull() is ClearFlowException)
             assertNull(testFlow.session.data.value)
             assertEquals(Lifecycle.State.NotInitialized, testFlow.lifecycle.value)
         }
 
     @Suppress("DeferredResultUnused")
     @Test
-    fun `given an Action in progress and pending actions, when MultiStepFlow_clear invoked outside the Action being performed, cancel all the actions`(): Unit =
+    fun `given a non-cancellable Action is in progress, when MultiStepFlow_clear invoked await Action termination before clearing the flow`(): Unit =
         runBlocking {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
+            var actionResult: Result<*>? = null
             val onContinueAction = Channel<Unit>()
-
-            val pendingAction1 = spyk(TestFlowAction {
-                println("#Test 1")
-            })
-            val pendingAction2 = spyk(TestFlowAction {
-                println("#Test 2")
-            })
 
             testFlow.start(testStep)
             asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(TestFlowAction {
-                    onContinueAction.receive()
+                actionResult = testStep.performAction(TestFlowAction {
+                    withContext(NonCancellable) {
+                        onContinueAction.receive()
+                    }
                 })
-            }
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(pendingAction1)
-            }
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(pendingAction2)
             }
 
             asyncUndispatchedOnUnconfinedDispatcher {
                 testFlow.clear()
             }
 
-            onContinueAction.trySend(Unit)
-
-            coVerify {
-                pendingAction1 wasNot called
-                pendingAction2 wasNot called
-            }
-
-            assertNull(testFlow.session.data.value)
-            assertEquals(Lifecycle.State.NotInitialized, testFlow.lifecycle.value)
-        }
-
-    @Suppress("DeferredResultUnused")
-    @Test
-    fun `given an Action in progress and pending actions, when MultiStepFlow_clear invoked inside the Action being performed, cancel all the actions`(): Unit =
-        runBlocking {
-            val testStep = Step(TestStep)
-            val testFlow = TestFlow()
-            val onContinueAction = Channel<Unit>()
-
-            val pendingAction1 = spyk(TestFlowAction {
-                println("#Test 1")
-            })
-            val pendingAction2 = spyk(TestFlowAction {
-                println("#Test 2")
-            })
-
-            testFlow.start(testStep)
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(TestFlowAction {
-                    onContinueAction.receive()
-                    testFlow.clear()
-                })
-            }
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(pendingAction1)
-            }
-            asyncUndispatchedOnUnconfinedDispatcher {
-                testStep.performAction(pendingAction2)
-            }
+            assertTrue(testFlow.lifecycle.value is Lifecycle.State.Clearing)
 
             onContinueAction.send(Unit)
 
-            coVerify {
-                pendingAction1 wasNot called
-                pendingAction2 wasNot called
-            }
-
+            assertTrue(actionResult?.exceptionOrNull() is ClearFlowException)
             assertNull(testFlow.session.data.value)
             assertEquals(Lifecycle.State.NotInitialized, testFlow.lifecycle.value)
         }

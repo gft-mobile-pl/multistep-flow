@@ -7,11 +7,9 @@ import com.gft.observablesession.Session
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.sync.Mutex
 
 open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
     val historyEnabled: Boolean,
-    internal val mutex: Mutex = Mutex(),
 ) {
     internal val session: Session<FlowState<*, *, *, *>> = Session()
 
@@ -34,7 +32,7 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
             }
 
             override fun hashCode(): Int {
-                return sessionId.hashCode() ?: 0
+                return sessionId.hashCode()
             }
 
             override fun toString(): String = "${this::class.simpleName}(sessionId=$sessionId)"
@@ -47,7 +45,7 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
             get() = flowState.value.resolveLifecycleState()
 
         override suspend fun collect(collector: FlowCollector<State>): Nothing {
-            flowState.collect { flowState -> flowState.resolveLifecycleState() }
+            flowState.collect { flowState -> collector.emit(flowState.resolveLifecycleState()) }
         }
 
         private fun FlowState<*, *, *, *>?.resolveLifecycleState() = this?.lifecycleState ?: State.NotInitialized
@@ -78,12 +76,12 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
 
     internal fun copy(
         currentStep: Step<*, *, *, *, *> = this.currentStep,
-        currentActionJob: Job? = this.currentActionJob,
+        currentAction: Job? = this.currentActionJob,
         stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory,
         lifecycleState: Lifecycle.State = this.lifecycleState,
     ) = FlowState(
         currentStep = currentStep,
-        currentActionJob = currentActionJob,
+        currentActionJob = currentAction,
         stepsHistory = stepsHistory,
         lifecycleState = lifecycleState,
     )

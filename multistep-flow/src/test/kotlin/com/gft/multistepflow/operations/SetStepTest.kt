@@ -5,7 +5,6 @@ import com.gft.multistepflow.BaseUserInputValidator
 import com.gft.multistepflow.DefaultNoOpValidator
 import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
-import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestFirstStepType
@@ -84,7 +83,7 @@ internal class SetStepTest {
         testFlow = TestFlow(historyEnabled = false)
     }
 
-    @Test(expected = InvalidFlowException::class)
+    @Test(expected = IllegalFlowException::class)
     fun `when the history is disabled and new step is set then history is empty`() {
         runBlocking {
             //given
