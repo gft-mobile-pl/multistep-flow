@@ -68,7 +68,7 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                         }
                     } catch (error: Throwable) {
                         when (error) {
-                            is CancellationException, is ActionError -> throw error
+                            is CancellationException, is ActionError, is IllegalFlowException -> throw error
                             else -> throw NotActionErrorException(error, action)
                         }
                     }

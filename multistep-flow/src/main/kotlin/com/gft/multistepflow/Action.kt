@@ -6,6 +6,7 @@ import com.gft.multistepflow.annotations.PerformActionInActionScope
 import com.gft.multistepflow.operations.ClearFlow
 import com.gft.multistepflow.operations.PerformAction
 import com.gft.multistepflow.operations.PerformChildAction
+import com.gft.multistepflow.operations.RestartFlow
 import com.gft.multistepflow.operations.SetStep
 import com.gft.multistepflow.operations.StartFlow
 
@@ -50,6 +51,9 @@ abstract class Action<SupportedStep, FlowStepType : StepType<*, *, *, *>> {
 
     val <T : FlowStepType> MultiStepFlow<T>.setStep
         get() = SetStep(this)
+
+    val <T : FlowStepType> MultiStepFlow<T>.restartFlow
+        get() = RestartFlow(this)
 }
 
 abstract class MultiFlowAction<SupportedStep, FlowStepType : StepType<*, *, *, *>> : Action<SupportedStep, FlowStepType>() {
