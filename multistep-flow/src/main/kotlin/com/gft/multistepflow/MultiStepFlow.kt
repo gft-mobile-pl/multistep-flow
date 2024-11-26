@@ -2,6 +2,7 @@ package com.gft.multistepflow
 
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.operations.ClearFlow
+import com.gft.multistepflow.operations.RequireStep
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.observablesession.Session
 import kotlinx.coroutines.Job
@@ -62,6 +63,9 @@ open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.start
     get() = StartFlow(this)
+
+val MultiStepFlow<out StepType<*, *, *, *>>.requireStep
+    get() = RequireStep(this)
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.clear: ClearFlow
     get() = ClearFlow(this)
