@@ -18,6 +18,8 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
             throw IllegalFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
         }
 
+        step.flow = flow
+
         flow.session.update { flowState ->
             if (flowState.currentStep.type == step.type) {
                 val stepToSet = if (reuseUserInput) {
