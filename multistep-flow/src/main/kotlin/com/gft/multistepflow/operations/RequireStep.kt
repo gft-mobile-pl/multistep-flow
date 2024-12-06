@@ -6,7 +6,7 @@ import com.gft.multistepflow.StepType
 import com.gft.multistepflow.utils.castOrNull
 
 class RequireStep internal constructor(
-    private val flow: MultiStepFlow<out StepType<*, *, *, *>>,
+    private val flow: MultiStepFlow<*>,
 ) {
     operator fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload, UserInput, ValidationResult> invoke(
         stepType: T,
