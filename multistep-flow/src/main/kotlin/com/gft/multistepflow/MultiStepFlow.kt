@@ -5,6 +5,7 @@ import com.gft.multistepflow.operations.AwaitStep
 import com.gft.multistepflow.operations.ClearFlow
 import com.gft.multistepflow.operations.RequireStep
 import com.gft.multistepflow.operations.StartFlow
+import com.gft.multistepflow.operations.StreamFlowState
 import com.gft.multistepflow.operations.WhenStep
 import com.gft.observablesession.Session
 import kotlinx.coroutines.Job
@@ -74,6 +75,9 @@ val MultiStepFlow<*>.awaitStep
 
 val MultiStepFlow<*>.whenStep
     get() = WhenStep(this)
+
+val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.streamState
+    get() = StreamFlowState(this)
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.clear: ClearFlow
     get() = ClearFlow(this)
