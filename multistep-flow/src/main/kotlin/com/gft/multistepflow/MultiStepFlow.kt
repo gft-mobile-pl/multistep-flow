@@ -2,6 +2,7 @@ package com.gft.multistepflow
 
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.operations.AwaitStep
+import com.gft.multistepflow.operations.ClearError
 import com.gft.multistepflow.operations.ClearFlow
 import com.gft.multistepflow.operations.GetStepFromHistory
 import com.gft.multistepflow.operations.RequireState
@@ -89,6 +90,10 @@ val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.streamStat
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.clear: ClearFlow
     get() = ClearFlow(this)
+
+val MultiStepFlow<*>.clearError
+    get() = ClearError(this)
+
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
