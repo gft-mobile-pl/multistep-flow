@@ -3,6 +3,7 @@ package com.gft.multistepflow
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.operations.AwaitStep
 import com.gft.multistepflow.operations.ClearFlow
+import com.gft.multistepflow.operations.RequireState
 import com.gft.multistepflow.operations.RequireStep
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.multistepflow.operations.StreamFlowState
@@ -75,6 +76,9 @@ val MultiStepFlow<*>.awaitStep
 
 val MultiStepFlow<*>.whenStep
     get() = WhenStep(this)
+
+val MultiStepFlow<*>.requireState
+    get() = RequireState(this)
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.streamState
     get() = StreamFlowState(this)
