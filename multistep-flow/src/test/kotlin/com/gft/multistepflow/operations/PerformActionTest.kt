@@ -166,7 +166,7 @@ class PerformActionTest {
 
             assertTrue(actionResult?.isFailure == true)
             assertTrue(actionResult?.exceptionOrNull() is IllegalFlowStateException)
-            assertNull(testFlow.session.data.value?.currentStep?.error)
+            assertNull(testFlow.session.data.value?.error)
         }
 
     @Suppress("DeferredResultUnused")
@@ -196,7 +196,7 @@ class PerformActionTest {
 
             assertTrue(actionResult?.isFailure == true)
             assertTrue(actionResult?.exceptionOrNull() is IllegalFlowStateException)
-            assertNull(testFlow.session.data.value?.currentStep?.error)
+            assertNull(testFlow.session.data.value?.error)
         }
 
     @Test
@@ -214,7 +214,7 @@ class PerformActionTest {
 
             assertTrue(result.isFailure)
             assertEquals((result.exceptionOrNull() as? ActionError)?.error, error)
-            assertEquals(error, testFlow.session.data.value?.currentStep?.error?.cause)
+            assertEquals(error, testFlow.session.data.value?.error?.cause)
         }
 
     @Suppress("DeferredResultUnused")
@@ -243,7 +243,7 @@ class PerformActionTest {
 
             assertTrue(action2Result?.isFailure == true)
             assertTrue(action2Result?.exceptionOrNull() is AnotherActionInProgressException)
-            assertNull(testFlow.session.data.value?.currentStep?.error)
+            assertNull(testFlow.session.data.value?.error)
         }
 
     @Test

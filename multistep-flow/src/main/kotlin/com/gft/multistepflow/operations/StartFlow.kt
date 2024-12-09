@@ -22,7 +22,8 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
                     currentStep = initialStep as Step<*, *, *, *, *>,
                     currentActionJob = null,
                     stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
-                    lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString())
+                    lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
+                    error = null
                 )
             )
             Result.success(Unit)

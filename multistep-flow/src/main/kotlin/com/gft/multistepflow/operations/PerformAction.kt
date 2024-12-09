@@ -92,9 +92,7 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                             flow.session.update { flowState ->
                                 flowState.copy(
                                     currentAction = null,
-                                    currentStep = flowState.currentStep.copy(
-                                        error = error
-                                    )
+                                    error = error,
                                 )
                             }
                         }

@@ -95,6 +95,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
     internal val currentActionJob: Job?,
     val stepsHistory: List<Step<*, *, *, *, *>>,
     val lifecycleState: Lifecycle.State,
+    val error: ActionError?,
 ) {
     val isAnyOperationInProgress: Boolean = currentActionJob != null
 
@@ -103,15 +104,17 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
         currentAction: Job? = this.currentActionJob,
         stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory,
         lifecycleState: Lifecycle.State = this.lifecycleState,
+        error: ActionError? = this.error,
     ) = FlowState(
         currentStep = currentStep,
         currentActionJob = currentAction,
         stepsHistory = stepsHistory,
         lifecycleState = lifecycleState,
+        error = error
     )
 
     override fun toString(): String {
-        return "FlowState(currentStep=$currentStep, isAnyOperationInProgress=$isAnyOperationInProgress, lifecycleState=$lifecycleState, stepsHistory=$stepsHistory)"
+        return "FlowState(currentStep=$currentStep, isAnyOperationInProgress=$isAnyOperationInProgress, lifecycleState=$lifecycleState, error=$error, stepsHistory=$stepsHistory)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -123,6 +126,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
         if (currentStep != other.currentStep) return false
         if (isAnyOperationInProgress != other.isAnyOperationInProgress) return false
         if (stepsHistory != other.stepsHistory) return false
+        if (error != other.error) return false
 
         return true
     }
@@ -131,6 +135,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
         var result = currentStep.hashCode()
         result = 31 * result + isAnyOperationInProgress.hashCode()
         result = 31 * result + stepsHistory.hashCode()
+        result = 31 * result + error.hashCode()
         return result
     }
 }

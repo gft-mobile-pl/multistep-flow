@@ -10,7 +10,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     val userInput: UserInput,
     val validationResult: ValidationResult,
     internal val userInputValidator: Validator? = null,
-    val error: ActionError? = null,
 ) {
     internal var flow: MultiStepFlow<in Type>? = null
 
@@ -32,14 +31,12 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         payload: Payload = this.payload,
         userInput: UserInput = this.userInput,
         validationResult: ValidationResult = this.validationResult,
-        error: ActionError? = this.error,
     ): Step<Type, Payload, UserInput, ValidationResult, Validator> = Step(
         type = type,
         payload = payload,
         userInput = userInput,
         validationResult = validationResult,
         userInputValidator = userInputValidator,
-        error = error
     )
 
     override fun toString(): String {
@@ -49,7 +46,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
                 "userInput=$userInput, " +
                 "validationResult=$validationResult, " +
                 "userInputValidator=${userInputValidator?.let { validator -> validator::class.simpleName }}, " +
-                "error=$error" +
                 ")"
     }
 
@@ -64,7 +60,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         if (userInput != other.userInput) return false
         if (validationResult != other.validationResult) return false
         if (userInputValidator != other.userInputValidator) return false
-        if (error != other.error) return false
 
         return true
     }
@@ -75,7 +70,6 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         result = 31 * result + (userInput?.hashCode() ?: 0)
         result = 31 * result + (validationResult?.hashCode() ?: 0)
         result = 31 * result + (userInputValidator?.hashCode() ?: 0)
-        result = 31 * result + (error?.hashCode() ?: 0)
         return result
     }
 
