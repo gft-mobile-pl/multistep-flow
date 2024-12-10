@@ -9,6 +9,7 @@ import com.gft.multistepflow.operations.RequireState
 import com.gft.multistepflow.operations.RequireStep
 import com.gft.multistepflow.operations.StartFlow
 import com.gft.multistepflow.operations.StreamFlowState
+import com.gft.multistepflow.operations.UpdateUserInput
 import com.gft.multistepflow.operations.WhenStep
 import com.gft.observablesession.Session
 import kotlinx.coroutines.Job
@@ -93,6 +94,9 @@ val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.clear: Cle
 
 val MultiStepFlow<*>.clearError
     get() = ClearError(this)
+
+val MultiStepFlow<*>.updateUserInput
+    get() = UpdateUserInput(this)
 
 
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
