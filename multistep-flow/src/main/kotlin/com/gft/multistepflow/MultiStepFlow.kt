@@ -83,7 +83,7 @@ val MultiStepFlow<*>.whenStep
 val MultiStepFlow<*>.getStepFromHistory
     get() = GetStepFromHistory(this)
 
-val MultiStepFlow<*>.requireState
+val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.requireState
     get() = RequireState(this)
 
 val <FlowStepType : StepType<*, *, *, *>> MultiStepFlow<FlowStepType>.streamState
