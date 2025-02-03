@@ -68,12 +68,12 @@ class UpdateUserInput internal constructor(
         val newInput = mutator(currentStep.userInput)
         val updatedStep = if (currentStep.userInputValidator != null) {
             val validationResult = currentStep.userInputValidator.validate(currentStep.userInput, newInput, currentStep.validationResult)
-            currentStep.copy(
+            currentStep.copyWithFlow(
                 userInput = newInput,
                 validationResult = validationResult
             )
         } else {
-            currentStep.copy(userInput = newInput)
+            currentStep.copyWithFlow(userInput = newInput)
         }
         return sessionData.copy(
             currentStep = updatedStep,

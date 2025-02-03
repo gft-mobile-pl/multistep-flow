@@ -23,7 +23,7 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
         flow.session.update { flowState ->
             if (flowState.currentStep.type == step.type) {
                 val stepToSet = if (reuseUserInput) {
-                    (step as Step<*, *, Any?, *, *>).copy(userInput = flowState.currentStep.userInput)
+                    (step as Step<*, *, Any?, *, *>).copyWithFlow(userInput = flowState.currentStep.userInput)
                 } else {
                     step
                 }
@@ -71,11 +71,13 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
         flow.session.update { flowState ->
             if (!flowState.stepsHistory.contains(clearHistoryTo)) throw IllegalArgumentException("Step $clearHistoryTo cannot be found in the history.")
 
+            step.flow = flow
+
             val newHistory = flowState.stepsHistory.popTo(clearHistoryTo, clearHistoryInclusive)
             val currentStep = newHistory.lastOrNull()
             if (currentStep?.type == step.type) {
                 val stepToSet = if (reuseUserInput) {
-                    (step as Step<*, *, Any?, *, *>).copy(userInput = currentStep.userInput)
+                    (step as Step<*, *, Any?, *, *>).copyWithFlow(userInput = currentStep.userInput)
                 } else {
                     step
                 }

@@ -39,6 +39,18 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         userInputValidator = userInputValidator,
     )
 
+    fun copyWithFlow(
+        payload: Payload = this.payload,
+        userInput: UserInput = this.userInput,
+        validationResult: ValidationResult = this.validationResult,
+    ): Step<Type, Payload, UserInput, ValidationResult, Validator> = Step(
+        type = type,
+        payload = payload,
+        userInput = userInput,
+        validationResult = validationResult,
+        userInputValidator = userInputValidator,
+    ).also { step -> step.flow = flow }
+
     override fun toString(): String {
         return "Step(" +
                 "type=${type::class.simpleName}, " +
