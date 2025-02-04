@@ -102,6 +102,7 @@ val MultiStepFlow<*>.updateUserInput
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
     internal val currentActionJob: Job?,
+    val currentActionType: Class<out Action<*, *>>?,
     val stepsHistory: List<Step<*, *, *, *, *>>,
     val lifecycleState: Lifecycle.State,
     val error: ActionError?,
@@ -110,13 +111,15 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
 
     internal fun copy(
         currentStep: Step<*, *, *, *, *> = this.currentStep,
-        currentAction: Job? = this.currentActionJob,
+        currentActionJob: Job? = this.currentActionJob,
+        currentActionType: Class<out Action<*, *>>? = this.currentActionType,
         stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory,
         lifecycleState: Lifecycle.State = this.lifecycleState,
         error: ActionError? = this.error,
     ) = FlowState(
         currentStep = currentStep,
-        currentActionJob = currentAction,
+        currentActionJob = currentActionJob,
+        currentActionType = currentActionType,
         stepsHistory = stepsHistory,
         lifecycleState = lifecycleState,
         error = error

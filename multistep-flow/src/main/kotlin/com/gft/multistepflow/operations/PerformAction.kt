@@ -84,14 +84,18 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                     when (error) {
                         // action completed or cancelled
                         null, is CancellationException -> flow.session.update { flowState ->
-                            flowState.copy(currentAction = null)
+                            flowState.copy(
+                                currentActionJob = null,
+                                currentActionType = null
+                            )
                         }
 
                         // action failed in a controlled way
                         is ActionError -> {
                             flow.session.update { flowState ->
                                 flowState.copy(
-                                    currentAction = null,
+                                    currentActionJob = null,
+                                    currentActionType = null,
                                     error = error,
                                 )
                             }
@@ -109,7 +113,10 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                         if (flowState.currentActionJob != null) {
                             throw AnotherActionInProgressException()
                         } else {
-                            flowState.copy(currentAction = actionJob)
+                            flowState.copy(
+                                currentActionJob = actionJob,
+                                currentActionType = action::class.java
+                            )
                         }
                     } else {
                         throw IllegalFlowStateException("Action $action cannot be performed - flow is not started.")

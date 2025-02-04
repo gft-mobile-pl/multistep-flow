@@ -23,6 +23,7 @@ class RestartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
             FlowState(
                 currentStep = initialStep as Step<*, *, *, *, *>,
                 currentActionJob = null,
+                currentActionType = null,
                 stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
                 lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
                 error = null
