@@ -5,6 +5,7 @@ import com.gft.multistepflow.FlowState
 import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
+import com.gft.multistepflow.UserInputValidator
 import com.gft.multistepflow.utils.castOrNull
 import com.gft.multistepflow.utils.replaceLast
 import com.gft.observablesession.Session
@@ -66,8 +67,8 @@ class UpdateUserInput internal constructor(
         sessionData: FlowState<*, *, *, *>
     ): FlowState<*, *, *, *> {
         val newInput = mutator(currentStep.userInput)
-        val updatedStep = if (currentStep.userInputValidator != null) {
-            val validationResult = currentStep.userInputValidator.validate(currentStep.userInput, newInput, currentStep.validationResult)
+        val updatedStep = if (currentStep.userInputValidator != null && currentStep.userInputValidator is UserInputValidator<UserInput, ValidationResult, *>) {
+            val validationResult = currentStep.userInputValidator.internalValidate(flow, currentStep.userInput, newInput, currentStep.validationResult)
             currentStep.copyWithFlow(
                 userInput = newInput,
                 validationResult = validationResult

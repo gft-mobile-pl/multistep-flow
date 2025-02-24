@@ -87,7 +87,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
 
     companion object {
         // all fields required
-        operator fun <Type : StepType<Payload, UserInput, ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : UserInputValidator<UserInput, ValidationResult>> invoke(
+        operator fun <Type : StepType<Payload, UserInput, ValidationResult, Validator>, Payload, UserInput, ValidationResult, Validator : UserInputValidator<UserInput, ValidationResult, in Type>> invoke(
             type: Type,
             payload: Payload,
             userInput: UserInput,

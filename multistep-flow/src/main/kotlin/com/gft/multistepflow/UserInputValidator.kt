@@ -3,15 +3,33 @@ package com.gft.multistepflow
 /**
  * Common interface of all user input validators.
  */
-interface UserInputValidator<in UserInput, ValidationResult> : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>
+abstract class UserInputValidator<in UserInput, ValidationResult, FlowStepType : StepType<*, *, *, *>> : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult> {
+    abstract fun validate(
+        flow: MultiStepFlow<FlowStepType>,
+        currentUserInput: UserInput,
+        newUserInput: UserInput,
+        currentValidationResult: ValidationResult
+    ): ValidationResult
+
+    @Suppress("UNCHECKED_CAST")
+    internal fun internalValidate(
+        flow: MultiStepFlow<*>,
+        currentUserInput: UserInput,
+        newUserInput: UserInput,
+        currentValidationResult: ValidationResult
+    ) = validate(
+        flow as MultiStepFlow<FlowStepType>,
+        currentUserInput,
+        newUserInput,
+        currentValidationResult
+    )
+}
 
 /**
  * Do not implement this interface directly - rather use [UserInputValidator].
  * This is just an intermediate interface which simplifies generics of input validators.
  */
-sealed interface BaseUserInputValidator<in UserInput, in CurrentValidationResult, out NewValidationResult> {
-    fun validate(currentUserInput: UserInput, newUserInput: UserInput, currentValidationResult: CurrentValidationResult): NewValidationResult
-}
+sealed interface BaseUserInputValidator<in UserInput, in CurrentValidationResult, out NewValidationResult>
 
 /**
  * A validator that does nothing and can be used with any [com.gft.multistepflow.StepType].
@@ -21,7 +39,7 @@ interface DefaultNoOpValidator : BaseUserInputValidator<Any?, Any?, Nothing>
 /**
  * A validator that uses a composite pattern to delegate field validation to designated [PartialValidator] instances.
  */
-abstract class CompositeUserInputValidator<UserInput, ValidationResult> : UserInputValidator<UserInput, ValidationResult> {
+abstract class CompositeUserInputValidator<UserInput, ValidationResult, FlowStepType : StepType<*, *, *, *>> : UserInputValidator<UserInput, ValidationResult, FlowStepType>() {
     @PublishedApi
     internal val validators: MutableList<ValidatorsListItem<*, *>> = mutableListOf()
 
@@ -40,7 +58,12 @@ abstract class CompositeUserInputValidator<UserInput, ValidationResult> : UserIn
     )
 
     @Suppress("UNCHECKED_CAST")
-    override fun validate(currentUserInput: UserInput, newUserInput: UserInput, currentValidationResult: ValidationResult): ValidationResult {
+    override fun validate(
+        flow: MultiStepFlow<FlowStepType>,
+        currentUserInput: UserInput,
+        newUserInput: UserInput,
+        currentValidationResult: ValidationResult
+    ): ValidationResult {
         return validators.fold(currentValidationResult) { newUserInputValidationResult, item ->
             val currentValue = item.valueProvider(ValueProviderContext(currentUserInput))
             val newValue = item.valueProvider(ValueProviderContext(newUserInput))
