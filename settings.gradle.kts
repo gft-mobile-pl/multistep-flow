@@ -13,7 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Multistep Flow"
+rootProject.name = "Multistep Flow 2"
 include(":example-app")
 include(":multistep-flow")
 include(":multistep-flow-koin")
