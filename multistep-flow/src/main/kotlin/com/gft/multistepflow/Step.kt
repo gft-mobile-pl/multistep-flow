@@ -39,7 +39,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
         userInputValidator = userInputValidator,
     )
 
-    fun copyWithFlow(
+    internal fun copyWithFlow(
         payload: Payload = this.payload,
         userInput: UserInput = this.userInput,
         validationResult: ValidationResult = this.validationResult,
