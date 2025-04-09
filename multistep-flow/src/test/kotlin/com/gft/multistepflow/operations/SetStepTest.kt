@@ -7,16 +7,22 @@ import com.gft.multistepflow.MultiFlowAction
 import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
+import com.gft.multistepflow.UserInputValidator
+import com.gft.multistepflow.operations.SetStepTest.TestStepType.StepToValidate
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestFirstStepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestFourthStepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestSecondStepType
 import com.gft.multistepflow.operations.SetStepTest.TestStepType.TestThirdStepType
 import com.gft.multistepflow.operations.SetStepTest.UnrelatedTestStepType.SomeUnrelatedStepType
 import com.gft.multistepflow.performAction
+import com.gft.multistepflow.requireState
 import com.gft.multistepflow.start
 import com.gft.multistepflow.utils.unwrapNotActionErrorException
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Test
+
+private const val VALID_USER_INPUT = "some correct input"
 
 internal class SetStepTest {
 
@@ -26,11 +32,12 @@ internal class SetStepTest {
         data object TestSecondStepType : TestStepType<Unit, Unit, Unit, DefaultNoOpValidator>
         data object TestThirdStepType : TestStepType<String, Int, Unit, DefaultNoOpValidator>
         data object TestFourthStepType : TestStepType<Unit, Unit, Unit, DefaultNoOpValidator>
+        data object StepToValidate : TestStepType<Unit, String, Boolean, TestValidator>
     }
 
     private class TestFlow(historyEnabled: Boolean) : MultiStepFlow<TestStepType<*, *, *, *>>(historyEnabled) {
         suspend fun performInActionScope(block: suspend Action<Any, TestStepType<*, *, *, *>>.() -> Unit) {
-            @Suppress("UNCHECKED_CAST")
+            @Suppress("UNCHECKED_CAST", "SimpleRedundantLet")
             (session.data.value?.currentStep as? Step<TestStepType<*, *, *, *>, *, *, *, *>)?.let { step ->
                 step.performAction(object : Action<Any, TestStepType<*, *, *, *>>() {
                     override suspend fun perform(flow: MultiStepFlow<TestStepType<*, *, *, *>>, transactionId: String) {
@@ -38,6 +45,12 @@ internal class SetStepTest {
                     }
                 })
             }
+        }
+    }
+
+    private class TestValidator : UserInputValidator<String, Boolean, TestStepType<*, *, *, *>>() {
+        override fun validate(flow: MultiStepFlow<TestStepType<*, *, *, *>>, currentUserInput: String, newUserInput: String, currentValidationResult: Boolean): Boolean {
+            return newUserInput == VALID_USER_INPUT
         }
     }
 
@@ -478,6 +491,7 @@ internal class SetStepTest {
 
             //when
             testFlow.start(Step(TestThirdStepType, "test", 5))
+
             testFlow.performInActionScope {
                 testFlow.setStep(Step(TestSecondStepType))
                 testFlow.setStep(Step(TestThirdStepType, "updated-1", 10))
@@ -523,6 +537,136 @@ internal class SetStepTest {
                     Step(TestThirdStepType, "updated", 10),
                 )
             )
+        }
+    }
+
+    @Test
+    fun `when step validation is requested and user input NOT reused, validate the new step`() {
+        runBlocking {
+            //given
+            testFlow = TestFlow(historyEnabled = true).apply {
+                start(Step(TestFirstStepType))
+            }
+            val testStep = Step(
+                type = StepToValidate,
+                payload = Unit,
+                userInput = VALID_USER_INPUT,
+                validationResult = false,
+                validator = TestValidator()
+            )
+
+            // when
+            testFlow.performInActionScope {
+                testFlow.setStep(
+                    step = testStep,
+                    reuseUserInput = false,
+                    validateUserInput = true
+                )
+            }
+
+            // then
+            assertEquals(true, testFlow.requireState().currentStep.validationResult)
+        }
+    }
+
+    @Test
+    fun `when step validation and history clearing is requested but reusing user input NOT requested, validate the new step`() {
+        runBlocking {
+            //given
+            testFlow = TestFlow(historyEnabled = true).apply {
+                start(Step(TestFirstStepType))
+            }
+            val testStep = Step(
+                type = StepToValidate,
+                payload = Unit,
+                userInput = VALID_USER_INPUT,
+                validationResult = false,
+                validator = TestValidator()
+            )
+
+            // when
+            testFlow.performInActionScope {
+                testFlow.setStep(
+                    step = testStep,
+                    reuseUserInput = false,
+                    clearHistoryTo = TestFirstStepType,
+                    clearHistoryInclusive = true,
+                    validateUserInput = true
+                )
+            }
+
+            // then
+            assertEquals(true, testFlow.requireState().currentStep.validationResult)
+            assertEquals(true, testFlow.requireState().stepsHistory[0].validationResult)
+        }
+    }
+
+    @Test
+    fun `when step validation is requested and user input should be reused, do not revalidate the new step`() {
+        runBlocking {
+            //given
+            testFlow = TestFlow(historyEnabled = true).apply {
+                start(Step(TestFirstStepType))
+            }
+            val testStep = Step(
+                type = StepToValidate,
+                payload = Unit,
+                userInput = VALID_USER_INPUT,
+                validationResult = false,
+                validator = TestValidator()
+            )
+
+            // when
+            testFlow.performInActionScope {
+                testFlow.setStep(
+                    step = testStep,
+                    reuseUserInput = true,
+                    validateUserInput = true
+                )
+            }
+
+            // then
+            assertEquals(false, testFlow.requireState().currentStep.validationResult)
+        }
+    }
+
+    @Test
+    fun `when step validation, reusing user input and history clearing is requested, do not validate the new step but use current validation result`() {
+        runBlocking {
+            //given
+            testFlow = TestFlow(historyEnabled = true).apply {
+                start(
+                    Step(
+                        type = StepToValidate,
+                        payload = Unit,
+                        userInput = VALID_USER_INPUT,
+                        validationResult = false,
+                        validator = TestValidator()
+                    )
+                )
+            }
+            val testStep = Step(
+                type = StepToValidate,
+                payload = Unit,
+                userInput = VALID_USER_INPUT,
+                validationResult = true,
+                validator = TestValidator()
+            )
+
+            // when
+            testFlow.performInActionScope {
+                testFlow.setStep(
+                    step = testStep,
+                    reuseUserInput = true,
+                    clearHistoryTo = StepToValidate,
+                    clearHistoryInclusive = false,
+                    validateUserInput = true
+                )
+            }
+
+            // then
+            assertEquals(false, testFlow.requireState().currentStep.validationResult)
+            assertEquals(false, testFlow.requireState().stepsHistory[0].validationResult)
         }
     }
 }

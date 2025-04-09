@@ -1,5 +1,6 @@
 package com.gft.multistepflow
 
+import com.gft.multistepflow.operations.IllegalFlowStateException
 import com.gft.multistepflow.operations.PerformAction
 
 interface StepType<Payload, UserInput, ValidationResult, Validator : BaseUserInputValidator<UserInput, ValidationResult, ValidationResult>>
@@ -12,6 +13,25 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     internal val userInputValidator: Validator? = null,
 ) {
     internal var flow: MultiStepFlow<in Type>? = null
+
+    internal fun validate(): Step<Type, Payload, UserInput, ValidationResult, *> {
+        if (flow == null) throw IllegalFlowStateException("Cannot validate step - step is not added to any flow.")
+
+        return if (userInputValidator != null) {
+            @Suppress("UNCHECKED_CAST")
+            copyWithFlow(
+                validationResult = (userInputValidator as (UserInputValidator<UserInput, ValidationResult, StepType<*, *, *, *>>))
+                    .validate(
+                        flow = flow as MultiStepFlow<StepType<*, *, *, *>>,
+                        currentUserInput = userInput,
+                        newUserInput = userInput,
+                        currentValidationResult = validationResult
+                    ),
+            )
+        } else {
+            this
+        }
+    }
 
     // Suppressing warning for unused generic type - it's not used here inside of the class, but it's used to ensure type safety when getting actions from steps
     @Suppress("unused")

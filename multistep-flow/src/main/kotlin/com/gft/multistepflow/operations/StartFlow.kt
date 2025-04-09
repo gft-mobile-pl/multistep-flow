@@ -5,6 +5,8 @@ import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
+import com.gft.multistepflow.requireState
+import com.gft.multistepflow.start
 import kotlinx.coroutines.flow.first
 import java.util.UUID
 
@@ -13,6 +15,7 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
 ) {
     suspend operator fun invoke(
         initialStep: Step<out FlowStepType, *, *, *, *>,
+        validateUserInput: Boolean = false
     ): Result<Unit> {
         if (initialStep.flow != null && initialStep.flow != flow) {
             throw IllegalArgumentException("Step can be added to one flow only. Copy the step if you need to add the same step to more than one flow.")
@@ -20,13 +23,25 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
 
         flow.lifecycle.first { state -> state !is Lifecycle.State.Clearing }
         return try {
-            initialStep.flow = flow
+            // validate initial step (if required) on a side flow to start with an already validated step
+            val updatedInitialStep = if (validateUserInput && initialStep.userInputValidator != null) {
+                val validationFlow = MultiStepFlow<FlowStepType>(historyEnabled = flow.historyEnabled)
+                validationFlow.start(
+                    initialStep = initialStep,
+                    validateUserInput = false
+                )
+                validationFlow.requireState().currentStep.validate()
+            } else {
+                initialStep
+            }
+
+            updatedInitialStep.flow = flow
             flow.session.start(
                 FlowState(
-                    currentStep = initialStep as Step<*, *, *, *, *>,
+                    currentStep = updatedInitialStep as Step<*, *, *, *, *>,
                     currentActionJob = null,
                     currentActionType = null,
-                    stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
+                    stepsHistory = if (flow.historyEnabled) listOf(updatedInitialStep) else emptyList(),
                     lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
                     error = null
                 )
@@ -39,7 +54,8 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
     }
 
     suspend operator fun invoke(
-        stepsHistory: List<Step<FlowStepType, *, *, *, *>>
+        stepsHistory: List<Step<out FlowStepType, *, *, *, *>>,
+        validateUserInput: Boolean = false
     ): Result<Unit> {
         if (!flow.historyEnabled)
             throw IllegalFlowException("Cannot start the flow using provided steps history as steps history feature is disabled for the current flow.")
@@ -54,12 +70,28 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
         flow.lifecycle.first { state -> state !is Lifecycle.State.Clearing }
 
         return try {
+            // validate each step (if required) on a side flow to start with an already validated steps
+            val updatedInitialSteps = if (validateUserInput) {
+                val validationFlow = MultiStepFlow<FlowStepType>(historyEnabled = true)
+                validationFlow.start(
+                    stepsHistory = stepsHistory,
+                    validateUserInput = false
+                )
+                validationFlow.requireState().stepsHistory.map { step ->
+                    if (step.userInputValidator != null) step.validate()
+                    else step
+                }
+            } else {
+                stepsHistory
+            }
+
+            @Suppress("UNCHECKED_CAST")
             flow.session.start(
                 FlowState(
-                    currentStep = stepsHistory.last() as Step<*, *, *, *, *>,
+                    currentStep = updatedInitialSteps.last() as Step<*, *, *, *, *>,
                     currentActionJob = null,
                     currentActionType = null,
-                    stepsHistory = stepsHistory.onEach { step -> step.flow = flow },
+                    stepsHistory = updatedInitialSteps.onEach { step -> (step as Step<FlowStepType, *, *, *, *>).flow = flow },
                     lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
                     error = null
                 )

@@ -21,7 +21,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -115,10 +114,6 @@ internal class StepsFilteringTest {
                     .mapNotNull { it?.currentStep }
                     .distinctUntilChanged()
                     .filterByStepType(TestSecondStepType)
-                    .map {
-                        println("#Test GOT $it")
-                        it
-                    }
                     .toList(collectedSteps)
             }
             testFlow.start(Step(TestFirstStepType))
