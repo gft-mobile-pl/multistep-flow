@@ -17,10 +17,12 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
         if (!coroutineContext.isPerformActionContext(flow)) {
             throw IllegalFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
         }
-
-        step.flow = flow
+        if (step.flow != null && step.flow != flow) {
+            throw IllegalArgumentException("Step can be added to one flow only. Copy the step if you need to add the same step to more than one flow.")
+        }
 
         flow.session.update { flowState ->
+            step.flow = flow
             if (flowState.currentStep.type == step.type) {
                 val stepToSet = if (reuseUserInput) {
                     (step as Step<*, *, Any?, *, *>).copyWithFlow(userInput = flowState.currentStep.userInput)
@@ -66,6 +68,9 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
     ) {
         if (!coroutineContext.isPerformActionContext(flow)) {
             throw IllegalFlowException("MultiStepFlow<*>.setStep(Step, Boolean) can only be called within an Action that was started in the context of that Flow.")
+        }
+        if (step.flow != null && step.flow != flow) {
+            throw IllegalArgumentException("Step can be added to one flow only. Copy the step if you need to add the same step to more than one flow.")
         }
 
         flow.session.update { flowState ->

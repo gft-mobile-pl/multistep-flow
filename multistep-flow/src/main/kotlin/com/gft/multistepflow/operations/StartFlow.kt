@@ -14,6 +14,10 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
     suspend operator fun invoke(
         initialStep: Step<out FlowStepType, *, *, *, *>,
     ): Result<Unit> {
+        if (initialStep.flow != null && initialStep.flow != flow) {
+            throw IllegalArgumentException("Step can be added to one flow only. Copy the step if you need to add the same step to more than one flow.")
+        }
+
         flow.lifecycle.first { state -> state !is Lifecycle.State.Clearing }
         return try {
             initialStep.flow = flow
