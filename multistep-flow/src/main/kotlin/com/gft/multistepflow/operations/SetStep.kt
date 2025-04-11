@@ -163,10 +163,17 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
     ): Step<FlowStepType, *, *, *, *> = try {
         val validationFlow = MultiStepFlow<StepType<*, *, *, *>>(historyEnabled = flow.historyEnabled)
         runBlocking {
-            validationFlow.start(
-                stepsHistory = flow.requireState().stepsHistory.onEach { step -> step.flow = null },
-                validateUserInput = false
-            )
+            if (flow.historyEnabled) {
+                validationFlow.start(
+                    stepsHistory = flow.requireState().stepsHistory.onEach { step -> step.flow = null },
+                    validateUserInput = false
+                )
+            } else {
+                validationFlow.start(
+                    initialStep = flow.requireState().currentStep.apply { flow = null },
+                    validateUserInput = false
+                )
+            }
             newStep.flow = validationFlow
             validationFlow.session.update { flowState ->
                 if (clearHistoryTo != null) flowState.setStep(newStep, false, clearHistoryTo, clearHistoryInclusive)
@@ -176,9 +183,12 @@ class SetStep<FlowStepType : StepType<*, *, *, *>> internal constructor(
         @Suppress("UNCHECKED_CAST")
         validationFlow.requireState().currentStep.validate() as Step<FlowStepType, *, *, *, *>
     } finally {
-        flow.requireState().stepsHistory.forEach { step ->
+        flow.requireState().apply {
             @Suppress("UNCHECKED_CAST")
-            step.flow = flow as MultiStepFlow<in StepType<*, *, *, *>>
+            currentStep.flow = flow as MultiStepFlow<in StepType<*, *, *, *>>
+            stepsHistory.forEach { step ->
+                step.flow = flow
+            }
         }
     }
 }

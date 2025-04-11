@@ -570,6 +570,35 @@ internal class SetStepTest {
     }
 
     @Test
+    fun `when step validation is requested, user input not reused and steps history disabled, validate the new step`() {
+        runBlocking {
+            //given
+            testFlow = TestFlow(historyEnabled = false).apply {
+                start(Step(TestFirstStepType))
+            }
+            val testStep = Step(
+                type = StepToValidate,
+                payload = Unit,
+                userInput = VALID_USER_INPUT,
+                validationResult = false,
+                validator = TestValidator()
+            )
+
+            // when
+            testFlow.performInActionScope {
+                testFlow.setStep(
+                    step = testStep,
+                    reuseUserInput = false,
+                    validateUserInput = true
+                )
+            }
+
+            // then
+            assertEquals(true, testFlow.requireState().currentStep.validationResult)
+        }
+    }
+
+    @Test
     fun `when step validation and history clearing is requested but reusing user input NOT requested, validate the new step`() {
         runBlocking {
             //given
