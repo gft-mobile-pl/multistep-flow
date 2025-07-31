@@ -4,6 +4,7 @@ import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
+import kotlin.jvm.JvmName
 
 @JvmName("filterStepsFlowByStepType")
 fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload, UserInput, ValidationResult> Flow<Step<*, *, *, *, *>>.filterByStepType(

@@ -2,8 +2,8 @@
 agp = "8.4.2"
 kotlin = "1.9.22"
 coreKtx = "1.13.1"
-observableSession = "1.0.0"
-coroutinesGftx = "1.0.1"
+observableSession = "1.1.0"
+coroutinesGftx = "1.1.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
@@ -35,4 +35,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublishVersion" }
-
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

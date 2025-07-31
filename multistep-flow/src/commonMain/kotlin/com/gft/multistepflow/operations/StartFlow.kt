@@ -7,8 +7,8 @@ import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.requireState
 import com.gft.multistepflow.start
+import com.gft.multistepflow.utils.randomUUID
 import kotlinx.coroutines.flow.first
-import java.util.UUID
 
 class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
     private val flow: MultiStepFlow<FlowStepType>,
@@ -42,7 +42,7 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
                     currentActionJob = null,
                     currentActionType = null,
                     stepsHistory = if (flow.historyEnabled) listOf(updatedInitialStep) else emptyList(),
-                    lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
+                    lifecycleState = Lifecycle.State.Started(randomUUID()),
                     error = null
                 )
             )
@@ -92,7 +92,7 @@ class StartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
                     currentActionJob = null,
                     currentActionType = null,
                     stepsHistory = updatedInitialSteps.onEach { step -> (step as Step<FlowStepType, *, *, *, *>).flow = flow },
-                    lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
+                    lifecycleState = Lifecycle.State.Started(randomUUID()),
                     error = null
                 )
             )

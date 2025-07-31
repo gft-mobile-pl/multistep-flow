@@ -2,6 +2,7 @@ package com.gft.multistepflow.utils
 
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
+import kotlin.jvm.JvmName
 
 internal fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload, UserInput, ValidationResult> Step<*, *, *, *, *>.castOrNull(
     stepType: T,

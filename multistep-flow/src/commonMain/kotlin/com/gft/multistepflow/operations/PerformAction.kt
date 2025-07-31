@@ -7,12 +7,12 @@ import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.NotActionErrorException
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
+import com.gft.multistepflow.utils.randomUUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import java.util.UUID
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
@@ -30,13 +30,13 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
 ) {
     suspend operator fun invoke(
         action: Action<in Type, in Type>,
-        transactionId: String = UUID.randomUUID().toString(),
+        transactionId: String = randomUUID(),
     ) = performActionImplementation(action = action, null, transactionId = transactionId)
 
     suspend operator fun <Type : StepType<*, *, *, *>> invoke(
         action: Action<in Type, in Type>,
         dispatcher: CoroutineDispatcher,
-        transactionId: String = UUID.randomUUID().toString(),
+        transactionId: String = randomUUID(),
     ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
 
     private suspend fun performActionImplementation(
@@ -115,7 +115,7 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                         } else {
                             flowState.copy(
                                 currentActionJob = actionJob,
-                                currentActionType = action::class.java
+                                currentActionType = action::class
                             )
                         }
                     } else {
@@ -146,13 +146,13 @@ class PerformChildAction<Type : StepType<*, *, *, *>> internal constructor(
 ) {
     suspend operator fun invoke(
         action: Action<in Type, in Type>,
-        transactionId: String = UUID.randomUUID().toString(),
+        transactionId: String = randomUUID(),
     ) = performActionImplementation(action = action, null, transactionId = transactionId)
 
     suspend operator fun <Type : StepType<*, *, *, *>> invoke(
         action: Action<in Type, in Type>,
         dispatcher: CoroutineDispatcher,
-        transactionId: String = UUID.randomUUID().toString(),
+        transactionId: String = randomUUID(),
     ) = performActionImplementation(action = action, dispatcher = dispatcher, transactionId = transactionId)
 
     private suspend fun performActionImplementation(

@@ -38,12 +38,12 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
     class Actions<StepType> {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (javaClass != other?.javaClass) return false
+            if (this::class != other?.let { other::class }) return false
             return true
         }
 
         override fun hashCode(): Int {
-            return javaClass.hashCode()
+            return this::class.hashCode()
         }
     }
 
@@ -83,7 +83,7 @@ class Step<Type : StepType<Payload, UserInput, ValidationResult, Validator>, Pay
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this::class != other?.let { other::class }) return false
 
         other as Step<*, *, *, *, *>
 

@@ -2,11 +2,11 @@ package com.gft.multistepflow.operations
 
 import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
-import kotlinx.coroutines.CancellationException
+import com.gft.multistepflow.utils.randomUUID
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import java.util.UUID
+import kotlinx.coroutines.CancellationException
 
 class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
     suspend operator fun invoke() = withContext(NonCancellable) {
@@ -20,7 +20,7 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
                     sessionId = flowState.lifecycleState.sessionId
                     flowState
                 } else {
-                    sessionId = UUID.randomUUID().toString()
+                    sessionId = randomUUID()
                     flowState.currentActionJob?.cancel(ClearFlowException())
                     flowState.copy(lifecycleState = Lifecycle.State.Clearing(sessionId))
                 }
@@ -54,4 +54,4 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
     }
 }
 
-internal class ClearFlowException : CancellationException()
+internal class ClearFlowException : CancellationException("Current action ended immediately (not cancellable).")

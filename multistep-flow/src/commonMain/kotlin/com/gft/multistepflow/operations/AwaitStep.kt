@@ -7,6 +7,7 @@ import com.gft.multistepflow.utils.filterByStepType
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlin.jvm.JvmName
 
 class AwaitStep internal constructor(private val flow: MultiStepFlow<*>) {
 

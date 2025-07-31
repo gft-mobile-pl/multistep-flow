@@ -1,24 +1,38 @@
 import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
-    id("java-library")
-    alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.maven.publish)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
+kotlin {
+    jvm {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = Java.jvmTarget
+            }
+        }
+    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
-dependencies {
-    implementation(libs.coroutines.core)
-    implementation(libs.gft.observablesession)
-    implementation(libs.gft.coroutines)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.coroutines.core)
+                implementation(libs.gft.observablesession)
+                implementation(libs.gft.coroutines)
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.mockk)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+    }
 }
 
 mavenPublishing {
@@ -46,7 +60,7 @@ mavenPublishing {
             connection.set("scm:git:git://${project.property("libraryRepositoryUrl") as String}")
             developerConnection.set("scm:git:ssh://git@${project.property("libraryRepositoryUrl") as String}.git")
         }
-        publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-        signAllPublications()
     }
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
 }

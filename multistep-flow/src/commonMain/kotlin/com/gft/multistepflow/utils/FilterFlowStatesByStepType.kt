@@ -4,6 +4,7 @@ import com.gft.multistepflow.FlowState
 import com.gft.multistepflow.StepType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
+import kotlin.jvm.JvmName
 
 @JvmName("filterFlowStatesByStepType")
 fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, Payload, UserInput, ValidationResult> Flow<FlowState<*, *, *, *>>.filterByStepType(
@@ -113,4 +114,3 @@ private fun <T : StepType<out Payload, out UserInput, out ValidationResult, *>, 
     stepType: T,
     vararg stepTypes: T
 ): Boolean = currentStep.type == stepType || currentStep.type in stepTypes
-

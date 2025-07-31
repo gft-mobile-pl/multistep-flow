@@ -4,6 +4,7 @@ import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
 import com.gft.multistepflow.utils.castOrNull
+import kotlin.jvm.JvmName
 
 class GetStepFromHistory internal constructor(private val flow: MultiStepFlow<*>) {
 

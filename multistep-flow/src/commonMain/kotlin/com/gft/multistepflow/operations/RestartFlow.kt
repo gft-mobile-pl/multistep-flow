@@ -5,7 +5,7 @@ import com.gft.multistepflow.MultiStepFlow
 import com.gft.multistepflow.MultiStepFlow.Lifecycle
 import com.gft.multistepflow.Step
 import com.gft.multistepflow.StepType
-import java.util.UUID
+import com.gft.multistepflow.utils.randomUUID
 import kotlin.coroutines.coroutineContext
 
 class RestartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
@@ -25,7 +25,7 @@ class RestartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
                 currentActionJob = null,
                 currentActionType = null,
                 stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
-                lifecycleState = Lifecycle.State.Started(UUID.randomUUID().toString()),
+                lifecycleState = Lifecycle.State.Started(randomUUID()),
                 error = null
             )
         }

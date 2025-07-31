@@ -15,6 +15,7 @@ import com.gft.observablesession.Session
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.reflect.KClass
 
 open class MultiStepFlow<FlowStepType : StepType<*, *, *, *>>(
     val historyEnabled: Boolean,
@@ -102,7 +103,7 @@ val MultiStepFlow<*>.updateUserInput
 class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payload, UserInput, ValidationResult>(
     val currentStep: Step<Type, Payload, UserInput, ValidationResult, *>,
     internal val currentActionJob: Job?,
-    val currentActionType: Class<out Action<*, *>>?,
+    val currentActionType: KClass<out Action<*, *>>?,
     val stepsHistory: List<Step<*, *, *, *, *>>,
     val lifecycleState: Lifecycle.State,
     val error: ActionError?,
@@ -112,7 +113,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
     internal fun copy(
         currentStep: Step<*, *, *, *, *> = this.currentStep,
         currentActionJob: Job? = this.currentActionJob,
-        currentActionType: Class<out Action<*, *>>? = this.currentActionType,
+        currentActionType: KClass<out Action<*, *>>? = this.currentActionType,
         stepsHistory: List<Step<*, *, *, *, *>> = this.stepsHistory,
         lifecycleState: Lifecycle.State = this.lifecycleState,
         error: ActionError? = this.error,
@@ -131,7 +132,7 @@ class FlowState<Type : StepType<Payload, UserInput, ValidationResult, *>, Payloa
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this::class != other?.let { other::class }) return false
 
         other as FlowState<*, *, *, *>
 
