@@ -54,4 +54,4 @@ class ClearFlow internal constructor(val flow: MultiStepFlow<*>) {
     }
 }
 
-internal class ClearFlowException : CancellationException("Current action ended immediately (not cancellable).")
+internal class ClearFlowException : CancellationException("Action cancelled due to flow clearing.")
