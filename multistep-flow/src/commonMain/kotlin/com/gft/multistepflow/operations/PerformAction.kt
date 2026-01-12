@@ -43,7 +43,7 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
         action: Action<*, *>,
         dispatcher: CoroutineDispatcher?,
         transactionId: String,
-    ): Result<Step<*, *, *, *, *>> {
+    ): Result<Step<*, *, *, *, *>?> {
         if (flow == null) {
             throw IllegalStateException("You must add the step to the flow before performing any action.")
         }
@@ -56,7 +56,7 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
         }
 
         return try {
-            withContext<Result<Step<*, *, *, *, *>>>(PerformActionContext(flow)) {
+            withContext(PerformActionContext(flow)) {
                 val actionJob = async(start = CoroutineStart.LAZY) {
                     try {
                         if (dispatcher != null) {

@@ -146,7 +146,7 @@ class PerformActionTest {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
             val onContinueFirstAction = Channel<Unit>()
-            var actionResult: Result<Step<*, *, *, *, *>>? = null
+            var actionResult: Result<Step<*, *, *, *, *>?>? = null
 
             testFlow.start(testStep)
             asyncUndispatchedOnUnconfinedDispatcher {
@@ -176,7 +176,7 @@ class PerformActionTest {
             val testStep = Step(TestStep)
             val testFlow = TestFlow()
             val onContinueFirstAction = Channel<Unit>()
-            var actionResult: Result<Step<*, *, *, *, *>>? = null
+            var actionResult: Result<Step<*, *, *, *, *>?>? = null
 
             testFlow.start(testStep)
             asyncUndispatchedOnUnconfinedDispatcher {
@@ -229,7 +229,7 @@ class PerformActionTest {
                 allActionsQueued.receive()
             })
             val action2 = spyk(TestFlowAction {})
-            var action2Result: Result<Step<*, *, *, *, *>>? = null
+            var action2Result: Result<Step<*, *, *, *, *>?>? = null
 
             testFlow.start(testStep)
             asyncUndispatchedOnUnconfinedDispatcher {
