@@ -18,12 +18,12 @@ class RestartFlow<FlowStepType : StepType<*, *, *, *>> internal constructor(
             throw IllegalFlowException("MultiStepFlow<*>.restartFlow(Step) can only be called within an Action that was started in the context of that Flow.")
         }
 
-        flow.session.update {
+        flow.session.update { flowState ->
             initialStep.flow = flow
             FlowState(
                 currentStep = initialStep as Step<*, *, *, *, *>,
-                currentActionJob = null,
-                currentActionType = null,
+                currentActionJob = flowState.currentActionJob,
+                currentActionType = flowState.currentActionType,
                 stepsHistory = if (flow.historyEnabled) listOf(initialStep) else emptyList(),
                 lifecycleState = Lifecycle.State.Started(randomUUID()),
                 error = null
