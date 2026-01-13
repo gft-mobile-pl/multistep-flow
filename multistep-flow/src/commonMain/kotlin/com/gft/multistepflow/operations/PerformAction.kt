@@ -66,45 +66,35 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                         } else {
                             action.internalPerform(flow, transactionId)
                         }
+                        flow.onActionFinished()
+                        flow.session.data.value!!.currentStep
                     } catch (error: Throwable) {
-                        when (error) {
-                            is CancellationException, is ActionError, is IllegalFlowException -> throw error
-                            else -> throw NotActionErrorException(error, action)
-                        }
-                    }
-                }
+                        if (flow.lifecycle.value is Lifecycle.State.NotInitialized) {
+                            // flow is already cleared
+                            // this scenario happens when `MultiStepFlow.clear` is called inside an Action
+                            // we consider this as success
+                        } else {
+                            when (error) {
+                                // action cancelled externally
+                                is CancellationException -> {
+                                    flow.onActionFinished()
+                                    throw error
+                                }
 
-                actionJob.invokeOnCompletion { error ->
-                    if (flow.lifecycle.value is Lifecycle.State.NotInitialized) {
-                        // flow is already cleared
-                        // this scenario happens when MultiStepFlow_clear is called inside an Action
-                        return@invokeOnCompletion
-                    }
+                                // action failed in a controlled way
+                                is ActionError -> {
+                                    flow.onActionFailed(error)
+                                    throw error
+                                }
 
-                    when (error) {
-                        // action completed or cancelled
-                        null, is CancellationException -> flow.session.update { flowState ->
-                            flowState.copy(
-                                currentActionJob = null,
-                                currentActionType = null
-                            )
-                        }
+                                // action tried to launch child action which belongs to another flow
+                                is IllegalFlowException -> throw error
 
-                        // action failed in a controlled way
-                        is ActionError -> {
-                            flow.session.update { flowState ->
-                                flowState.copy(
-                                    currentActionJob = null,
-                                    currentActionType = null,
-                                    error = error,
-                                )
+                                // any other error thrown in uncontrolled way
+                                else -> throw NotActionErrorException(error, action)
                             }
                         }
-
-                        // improperly handled error
-                        else -> {
-                            // no need to clear flow state -> we will let the app to crash
-                        }
+                        null
                     }
                 }
 
@@ -123,8 +113,7 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                     }
                 }
 
-                actionJob.await()
-                Result.success(flow.session.data.value!!.currentStep)
+                Result.success(actionJob.await())
             }
         } catch (error: Throwable) {
             when (error) {
@@ -138,6 +127,26 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                 else -> throw error
             }
         }
+    }
+
+    private fun MultiStepFlow<*>.onActionFinished(): MultiStepFlow<*> {
+        runCatching {
+            session.update { flowState ->
+                flowState.copy(
+                    currentActionJob = null,
+                    currentActionType = null
+                )
+            }
+        }
+        return this
+    }
+
+    private fun MultiStepFlow<*>.onActionFailed(error: ActionError) = session.update { flowState ->
+        flowState.copy(
+            currentActionJob = null,
+            currentActionType = null,
+            error = error
+        )
     }
 }
 
