@@ -58,44 +58,15 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
         return try {
             withContext(PerformActionContext(flow)) {
                 val actionJob = async(start = CoroutineStart.LAZY) {
-                    try {
-                        if (dispatcher != null) {
-                            withContext(dispatcher) {
-                                action.internalPerform(flow, transactionId)
-                            }
-                        } else {
+                    if (dispatcher != null) {
+                        withContext(dispatcher) {
                             action.internalPerform(flow, transactionId)
                         }
-                        flow.onActionFinished()
-                        flow.session.data.value!!.currentStep
-                    } catch (error: Throwable) {
-                        if (flow.lifecycle.value is Lifecycle.State.NotInitialized) {
-                            // flow is already cleared
-                            // this scenario happens when `MultiStepFlow.clear` is called inside an Action
-                            // we consider this as success
-                        } else {
-                            when (error) {
-                                // action cancelled externally
-                                is CancellationException -> {
-                                    flow.onActionFinished()
-                                    throw error
-                                }
-
-                                // action failed in a controlled way
-                                is ActionError -> {
-                                    flow.onActionFailed(error)
-                                    throw error
-                                }
-
-                                // action tried to launch child action which belongs to another flow
-                                is IllegalFlowException -> throw error
-
-                                // any other error thrown in uncontrolled way
-                                else -> throw NotActionErrorException(error, action)
-                            }
-                        }
-                        null
+                    } else {
+                        action.internalPerform(flow, transactionId)
                     }
+                    flow.onActionFinished()
+                    flow.session.data.value!!.currentStep
                 }
 
                 flow.session.update { flowState ->
@@ -116,15 +87,42 @@ class PerformAction<Type : StepType<*, *, *, *>> internal constructor(
                 Result.success(actionJob.await())
             }
         } catch (error: Throwable) {
-            when (error) {
-                // properly handled error
-                is CancellationException, is ActionError, is AnotherActionInProgressException, is IllegalFlowStateException -> {
-                    Result.failure(error)
-                }
+            if (flow.lifecycle.value is Lifecycle.State.NotInitialized) {
+                // flow is already cleared
+                // this scenario happens when `MultiStepFlow.clear` is called inside an Action
+                // we consider this as success
+                Result.success(null)
+            } else {
+                when (error) {
+                    // action cancelled externally
+                    is CancellationException -> {
+                        flow.onActionFinished()
+                        Result.failure(error)
+                    }
 
-                // unhandled error: someone forgot to wrap the error in ActionError or used performAction incorrectly
-                // -> we will let the app crash
-                else -> throw error
+                    // action failed in a controlled way
+                    is ActionError -> {
+                        flow.onActionFailed(error)
+                        Result.failure(error)
+                    }
+
+                    // action tried to launch child action which belongs to another flow
+                    is IllegalFlowException -> {
+                        throw error
+                    }
+
+                    is IllegalFlowStateException -> {
+                        Result.failure(error)
+                    }
+
+                    // action cannot be started until previous action is complete
+                    is AnotherActionInProgressException -> {
+                        Result.failure(error)
+                    }
+
+                    // any other error thrown in uncontrolled way
+                    else -> throw NotActionErrorException(error, action)
+                }
             }
         }
     }

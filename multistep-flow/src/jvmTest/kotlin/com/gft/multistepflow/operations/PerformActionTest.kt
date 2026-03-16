@@ -1,5 +1,6 @@
 package com.gft.multistepflow.operations
 
+import com.gft.coroutines.launchUndispatched
 import com.gft.multistepflow.Action
 import com.gft.multistepflow.ActionError
 import com.gft.multistepflow.DefaultNoOpValidator
@@ -13,6 +14,7 @@ import com.gft.multistepflow.clear
 import com.gft.multistepflow.operations.NotRelatedSteps.NotRelatedCancellableStepType
 import com.gft.multistepflow.operations.PaymentStep.PaymentWithQRCodeStep
 import com.gft.multistepflow.performAction
+import com.gft.multistepflow.requireState
 import com.gft.multistepflow.start
 import com.gft.multistepflow.utils.asyncUndispatchedOnUnconfinedDispatcher
 import com.gft.multistepflow.utils.unwrapNotActionErrorException
@@ -24,6 +26,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.cancelAndJoin
@@ -38,6 +41,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.coroutines.cancellation.CancellationException
 
 class PerformActionTest {
     sealed interface TestFlowStep : StepType<Unit, Unit, Unit, DefaultNoOpValidator>
@@ -127,7 +131,7 @@ class PerformActionTest {
     fun `given Action sets new step, when Step_performAction is invoked, the result is Result_success(new step)`(): Unit =
         runBlocking {
             val testStep1 = Step(TestStep)
-            val testStep2  = Step(NextTestStep)
+            val testStep2 = Step(NextTestStep)
             val testFlow = TestFlow()
             val action = spyk(TestFlowAction {
                 testFlow.setStep(testStep2)
@@ -340,6 +344,55 @@ class PerformActionTest {
                 throw error.unwrapNotActionErrorException()
             }
         }
+
+
+    @Test
+    fun `when Step_performAction is cancelled before Action was started, clear the action related data in the flow and report action failure`(): Unit = runBlocking {
+        val testStep = Step(TestStep)
+        val testFlow = TestFlow()
+        var onCollectionActiveDispatched = false
+        val onCollectionActive = Channel<Unit>()
+        val onActionTerminated = Channel<Unit>()
+        var actionResult: Result<*>? = null
+        val lastActionTask = mockk<Runnable> { every { run() } just Runs }
+        val action = spyk(TestFlowAction {
+            lastActionTask.run()
+        })
+        testFlow.start(testStep)
+
+        val collectorJob = launchUndispatched {
+            testFlow.session.data.collect { state ->
+                if (!onCollectionActiveDispatched) {
+                    onCollectionActiveDispatched = true
+                    onCollectionActive.send(Unit)
+                }
+
+                if (state?.isAnyOperationInProgress == true) {
+                    testFlow.requireState().currentActionJob?.cancel(CancellationException("Test"))
+                }
+            }
+        }
+
+        onCollectionActive.receive()
+
+        launchUndispatched {
+            actionResult = testStep.performAction(action, Dispatchers.IO)
+            onActionTerminated.send(Unit)
+        }
+
+        onActionTerminated.receive()
+        collectorJob.cancelAndJoin()
+
+        verify {
+            lastActionTask wasNot called
+        }
+
+        assertTrue(actionResult?.isFailure == true)
+        assertTrue(actionResult?.exceptionOrNull() is CancellationException)
+        assertNull(testFlow.requireState().currentActionJob)
+        assertNull(testFlow.requireState().currentActionType)
+        assertFalse(testFlow.requireState().isAnyOperationInProgress)
+    }
 
     // This method should never be run as a part of test suite - its purpose is to check the generics definition statically
     @Suppress("UNUSED_VARIABLE")

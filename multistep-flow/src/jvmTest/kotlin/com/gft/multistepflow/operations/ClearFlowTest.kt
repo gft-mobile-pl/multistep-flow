@@ -108,7 +108,8 @@ class ClearFlowTest {
                 lastActionTask wasNot called
             }
 
-            assertTrue(actionResult?.exceptionOrNull() is ClearFlowException)
+            assertNull(actionResult?.exceptionOrNull())
+            assertTrue(actionResult!!.isSuccess)
             assertNull(testFlow.session.data.value)
             assertEquals(Lifecycle.State.NotInitialized, testFlow.lifecycle.value)
         }
